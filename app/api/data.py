@@ -50,7 +50,15 @@ def get_undervalued_players(
         budget_players["value_eur"] / 1_000_000 + 1
     )
     return budget_players.nlargest(top_n, "value_score")[
-        ["short_name", "age", "overall", "value_eur", "club_name", "player_positions"]
+        [
+            "short_name",
+            "age",
+            "overall",
+            "value_eur",
+            "club_name",
+            "player_positions",
+            "value_score",
+        ]
     ]
 
 
