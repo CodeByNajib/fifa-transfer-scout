@@ -1,5 +1,5 @@
 # FIFA Transfer Scout
-![FIFA Transfer Scout Image] (FIFA_Transfer_Scout.png)
+![FIFA Transfer Scout Logo](FIFA_Transfer_Scout.png)
 
 Explore and analyze FIFA player data through an interactive dashboard with AI-powered insights. This project identifies "Hidden Gems" and top talent using FIFA 22 data, FastAPI, and Mistral AI, demonstrating a full-stack integration of data science and Large Language Models (LLM).
 
