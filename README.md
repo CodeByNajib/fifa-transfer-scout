@@ -64,6 +64,8 @@ streamlit run app/frontend/streamlit_app.py
 ```
 
 ## Project Structure
+
+```
 .
 ├── app/
 │   ├── api/          # FastAPI backend & data module
@@ -72,6 +74,7 @@ streamlit run app/frontend/streamlit_app.py
 ├── docker-compose.yml
 ├── requirements.txt
 └── README.md
+```
 
 ## API Endpoints
 
