@@ -26,3 +26,8 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.46.0
 zipp==3.23.1
+
+streamlit
+geopandas
+matplotlib
+requests
