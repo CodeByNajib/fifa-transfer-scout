@@ -1,0 +1,30 @@
+# Python virtuelt miljø (VIGTIGST!)
+venv/
+.venv/
+env/
+
+# Python cache (gør bygningen hurtigere næste gang)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Hemmeligheder (de bliver indlæst via env_file i compose i stedet)
+.env
+.env.local
+**/certs/
+
+# Git log (unødvendigt i containeren)
+.git/
+.gitignore
+
+# Docker filer (de skal ikke kopiere sig selv)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Lokale IDE indstillinger
+.vscode/
+.idea/
+
+# OS specifikke filer
+.DS_Store
