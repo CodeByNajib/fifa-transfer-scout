@@ -4,8 +4,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
+import geopandas as gpd
+import os
+import httpx
 
-API_URL = "http://localhost:8000"
+# Streamlit-kode bruger denne miljøvariabel
+API_URL = os.getenv("API_URL", "http://localhost:8000")
+
+# Når API'en kaldes:
+response = httpx.get(f"{API_URL}/players/top/ST")
 
 
 st.set_page_config(
@@ -42,7 +49,9 @@ st.markdown(
 with st.sidebar:
     st.markdown("### Analysis Mode")
     page = st.radio(
-        "", ["Top Players", "Hidden Gems", "Career Peak"], label_visibility="collapsed"
+        "",
+        ["Top Players", "Hidden Gems", "Career Peak", "World Map"],
+        label_visibility="collapsed",
     )
     st.markdown("---")
     st.markdown(
@@ -216,3 +225,57 @@ elif page == "Career Peak":
         st.pyplot(fig)
 
         st.dataframe(df, use_container_width=True, hide_index=True)
+
+# --- World Map ---
+elif page == "World Map":
+    st.markdown("### Global Player Distribution")
+    st.markdown(
+        "This map visualizes the nationality of all players in the dataset using GeoPandas."
+    )
+
+    response = requests.get(f"{API_URL}/players/nationality")
+
+    if response.status_code == 200:
+        counts_df = pd.DataFrame(response.json())
+
+        # Hent indbygget verdenskort fra geopandas
+        # Hent verdenskortet direkte fra Natural Earth data
+        world = gpd.read_file(
+            "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
+        )
+
+        # Map navne for at sikre bedre match (FIFA navne vs Kort navne)
+        name_map = {
+            "United States": "United States of America",
+            "England": "United Kingdom",
+            "China PR": "China",
+        }
+        counts_df["country"] = counts_df["country"].replace(name_map)
+
+        # Merge FIFA data med verdenskort
+        world = world.merge(counts_df, left_on="ADMIN", right_on="country", how="left")
+        world["player_count"] = world["player_count"].fillna(0)
+
+        # Plotting
+        fig, ax = plt.subplots(1, 1, figsize=(15, 10), facecolor="#0e1117")
+        ax.set_facecolor("#0e1117")
+
+        # Tegn kortet
+        world.plot(
+            column="player_count",
+            ax=ax,
+            legend=True,
+            legend_kwds={"label": "Number of Players", "orientation": "horizontal"},
+            cmap="Blues",
+            edgecolor="#2d333b",
+            linewidth=0.5,
+            missing_kwds={"color": "#161b22"},  # Lande uden data bliver mørke
+        )
+
+        ax.set_axis_off()
+        fig.tight_layout()
+        st.pyplot(fig)
+
+        # Vis top 10 lande i en tabel nedenunder
+        st.markdown("#### Distribution Details")
+        st.dataframe(counts_df.head(10), use_container_width=True, hide_index=True)

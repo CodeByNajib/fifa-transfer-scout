@@ -2,15 +2,21 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
+import os  # <--- Vigtigt for os.getenv
+import httpx  # <--- Vigtigt for live match data
+from dotenv import load_dotenv  # <--- Vigtigt for at læse .env filen
 
-# Import af dine egne moduler fra projektstrukturen
+# Import af mine egne moduler fra projektstrukturen
 from app.api.data import (
     load_data,
     get_top_players,
     get_undervalued_players,
     get_peak_age_by_position,
+    get_nationality_counts,
 )
 from app.api.scout_ai import ask_scout_assistant
+
+load_dotenv()  # <--- Denne for at indlæse mine nøgler!
 
 app = FastAPI(title="FIFA Transfer Scout API")
 
@@ -85,3 +91,29 @@ def ask_scout(payload: ScoutQuery):
     except Exception as e:
         # Returnerer en 500-fejl hvis der opstår problemer med API-kaldet til Mistral
         raise HTTPException(status_code=500, detail=f"AI Assistant error: {str(e)}")
+
+
+# Geografisk endpoint: Så streamlit kan hente geografiske data
+@app.get("/players/nationality")
+def player_nationality():
+    result = get_nationality_counts(df)
+    return result.to_dict(orient="records")
+
+
+# # Live match data fra football-data.org (krav i opgavebeskrivelse)
+@app.get("/transfers/news")
+async def get_football_news():
+    """
+    Henter aktuelle fodboldkampe og resultater fra et eksternt API.
+    Dette endpoint opfylder kravet om integration af ekstern live-data.
+    """
+
+    api_key = os.getenv("FOOTBALL_DATA_API_KEY")
+    url = "https://api.football-data.org/v4/matches"
+    headers = {"X-Auth-Token": api_key}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
+        if response.status_code != 200:
+            return {"error": "Could not fetch live data", "details": response.text}
+        return response.json()

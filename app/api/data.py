@@ -3,13 +3,17 @@ import numpy as np
 from pathlib import Path
 
 
-# Path to dataset
-DATA_PATH = Path(__file__).parent.parent / "data" / "players_22.csv"
+# Ny sti: Kigger direkte i mappen hvor koden kører (eller i roden af containeren)
+DATA_PATH = Path("players_22.csv")
 
 
 # Loads and cleans the FIFA 22 player dataset from the data directory
 def load_data() -> pd.DataFrame:
     """Load and clean FIFA 22 player dataset."""
+    # Tilføjer check for at se om filen findes, så jeg får en pæn fejlbesked
+    if not DATA_PATH.exists():
+        raise FileNotFoundError(f"Could not find {DATA_PATH}. Check the path!")
+
     df = pd.read_csv(DATA_PATH, low_memory=False)
     columns = [
         "short_name",
@@ -81,3 +85,10 @@ def get_peak_age_by_position(df: pd.DataFrame) -> pd.DataFrame:
                 }
             )
     return pd.DataFrame(results)
+
+
+# Count number of players per country and return a dictionary
+def get_nationality_counts(df):
+    counts = df["nationality_name"].value_counts().reset_index()
+    counts.columns = ["country", "player_count"]
+    return counts
