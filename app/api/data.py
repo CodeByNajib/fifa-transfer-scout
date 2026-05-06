@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
 
@@ -28,6 +27,9 @@ def load_data() -> pd.DataFrame:
         "nationality_name",
         "league_name",
     ]
+    df = df[columns].dropna()
+    df["value_eur"] = df["value_eur"].astype(float)
+    df["wage_eur"] = df["wage_eur"].astype(float)
     return df
 
 
