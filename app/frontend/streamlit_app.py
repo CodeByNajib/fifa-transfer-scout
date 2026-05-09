@@ -4,14 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import os
-import httpx
+import plotly.express as px
 
 # Streamlit-kode bruger denne miljøvariabel
 API_URL = os.getenv("API_URL", "http://localhost:8000")
-
-# Når API'en kaldes:
-response = httpx.get(f"{API_URL}/players/top/ST")
-
 
 st.set_page_config(
     page_title="FIFA Transfer Scout",
@@ -43,24 +39,75 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Sidebar
+# Initialisér aktiv side i session state hvis den ikke findes
+if "page" not in st.session_state:
+    st.session_state.page = "[TOP]  Players"
+
+# Custom CSS til knap-navigation i sidebar
+st.markdown(
+    """
+<style>
+    [data-testid="stSidebar"] .stButton button {
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: 0.5px solid #2d333b;
+        border-radius: 6px;
+        color: #8b949e;
+        font-size: 12px;
+        font-family: monospace;
+        padding: 6px 10px;
+        margin-bottom: 4px;
+        transition: all 0.15s;
+    }
+    [data-testid="stSidebar"] .stButton button:hover {
+        background: #21262d;
+        color: #c9d1d9;
+        border-color: #444c56;
+    }
+    [data-testid="stSidebar"] .stButton button:focus {
+        background: #1f3a5f;
+        color: #58a6ff;
+        border-color: #58a6ff;
+        box-shadow: none;
+    }
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+# Sidebar navigationsknapper
 with st.sidebar:
     st.markdown("### Analysis Mode")
-    page = st.radio(
-        "",
-        ["Top Players", "Hidden Gems", "Career Peak", "World Map"],
-        label_visibility="collapsed",
-    )
+    st.markdown("---")
+
+    pages = [
+        "[TOP]  Players",
+        "[GEM]  Hidden Gems",
+        "[PEAK]  Career Peak",
+        "[MAP]  World Map",
+        "[LIST]  Watchlist",
+        "[LOG]  History",
+    ]
+
+    # Vis en knap per side — klik sætter session state
+    for p in pages:
+        if st.button(p, key=f"nav_{p}"):
+            st.session_state.page = p
+
     st.markdown("---")
     st.markdown(
         '<p style="color:#8b949e; font-size:0.75rem;">Data: FIFA 22 · 19,000+ players</p>',
         unsafe_allow_html=True,
     )
 
+# Hent aktiv side fra session state
+page = st.session_state.page
+
 
 # --- Top Players ---
-if page == "Top Players":
-    st.markdown("### Best players by position")
+if page == "[TOP]  Players":
+    st.markdown("### [TOP] Best players by position")
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -79,14 +126,14 @@ if page == "Top Players":
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
 
-        # Summary metrics
+        # Opsummeringsmetrikker øverst
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg. Rating", f"{df['overall'].mean():.1f}")
         c2.metric("Avg. Age", f"{df['age'].mean():.1f} yrs")
         c3.metric("Avg. Value", f"€{df['value_eur'].mean() / 1_000_000:.1f}M")
 
-        # Horizontal bar chart
-        fig, ax = plt.subplots(figsize=(10, top_n * 0.5 + 1), facecolor="#0e1117")
+        # Vandret søjlediagram
+        fig, ax = plt.subplots(figsize=(8, top_n * 0.4 + 1), facecolor="#0e1117")
         ax.set_facecolor("#0e1117")
         colors = [
             "#58a6ff" if r >= 88 else "#388bfd" if r >= 84 else "#1f6feb"
@@ -111,16 +158,30 @@ if page == "Top Players":
         fig.tight_layout()
         st.pyplot(fig)
 
-        # Table
-        df_display = df.copy()
-        df_display["value_eur"] = df["value_eur"].apply(
-            lambda x: f"€{x / 1_000_000:.1f}M"
-        )
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        # Tabel med watchlist-knap per spiller
+        st.markdown("#### Player List")
+        for _, row in df.iterrows():
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                value_fmt = f"€{row['value_eur'] / 1_000_000:.1f}M"
+                st.markdown(
+                    f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; {value_fmt}"
+                )
+            with col2:
+                # Knap til at tilføje spilleren til watchlisten
+                if st.button("+ Watchlist", key=f"watch_top_{row['short_name']}"):
+                    res = requests.post(f"{API_URL}/watchlist", json=row.to_dict())
+                    if res.status_code == 200:
+                        st.success(f"{row['short_name']} added!")
+                    elif res.status_code == 409:
+                        st.warning(res.json()["detail"])
+                    else:
+                        st.error("Something went wrong")
+
 
 # --- Hidden Gems ---
-elif page == "Hidden Gems":
-    st.markdown("### Undervalued players - high quality, low cost")
+elif page == "[GEM]  Hidden Gems":
+    st.markdown("### [GEM] Undervalued players — high quality, low cost")
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -141,55 +202,70 @@ elif page == "Hidden Gems":
         c2.metric("Avg. Value", f"€{df['value_eur'].mean() / 1_000_000:.1f}M")
         c3.metric("Best value score", f"{df['value_score'].max():.1f}")
 
-        # Scatter: rating vs value
-        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#0e1117")
-        ax.set_facecolor("#0e1117")
-        scatter = ax.scatter(
-            df["value_eur"] / 1_000_000,
-            df["overall"],
-            c=df["value_score"],
-            cmap="Blues",
-            s=120,
-            edgecolors="#58a6ff",
-            linewidths=0.5,
+        # Scatter: rating vs. markedsværdi — hover viser spillernavn interaktivt
+        fig = px.scatter(
+            df,
+            x=df["value_eur"] / 1_000_000,
+            y="overall",
+            color="value_score",
+            hover_name="short_name",
+            hover_data={
+                "overall": True,
+                "value_score": ":.1f",
+                "player_positions": True,
+                "club_name": True,
+            },
+            color_continuous_scale="Blues",
+            labels={
+                "x": "Market Value (€M)",
+                "overall": "Overall Rating",
+                "value_score": "Value Score",
+            },
         )
-        for _, row in df.iterrows():
-            ax.annotate(
-                row["short_name"],
-                (row["value_eur"] / 1_000_000, row["overall"]),
-                textcoords="offset points",
-                xytext=(8, 5),
-                fontsize=8,
-                color="#c9d1d9",
-                fontweight="bold",
-            )
-        ax.set_xlabel("Market Value (€M)", color="#8b949e")
-        ax.set_ylabel("Overall Rating", color="#8b949e")
-        ax.set_ylim(70, 85)  # Fixed range so the plot doesn't zoom in too much
-        ax.tick_params(colors="#8b949e")
-        ax.spines[["top", "right", "bottom", "left"]].set_color("#2d333b")
-        fig.tight_layout()
-        st.pyplot(fig)
+        fig.update_traces(marker=dict(size=12, line=dict(width=1, color="#58a6ff")))
+        fig.update_layout(
+            paper_bgcolor="#0e1117",
+            plot_bgcolor="#0e1117",
+            font=dict(color="#c9d1d9"),
+            yaxis=dict(range=[70, 85], gridcolor="#2d333b"),
+            xaxis=dict(gridcolor="#2d333b"),
+            coloraxis_colorbar=dict(title="Score"),
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-        df_display = df.copy()
-        df_display["value_eur"] = df["value_eur"].apply(
-            lambda x: f"€{x / 1_000_000:.1f}M"
-        )
-        df_display["value_score"] = df["value_score"].apply(lambda x: f"{x:.1f}")
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        # Tabel med watchlist-knap per spiller
+        st.markdown("#### Player List")
+        for _, row in df.iterrows():
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                value_fmt = f"€{row['value_eur'] / 1_000_000:.1f}M"
+                st.markdown(
+                    f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; Score: {row['value_score']:.1f} &nbsp;|&nbsp; {value_fmt}"
+                )
+            with col2:
+                # Knap til at tilføje spilleren til watchlisten
+                if st.button("+ Watchlist", key=f"watch_gem_{row['short_name']}"):
+                    res = requests.post(f"{API_URL}/watchlist", json=row.to_dict())
+                    if res.status_code == 200:
+                        st.success(f"{row['short_name']} added!")
+                    elif res.status_code == 409:
+                        st.warning(res.json()["detail"])
+                    else:
+                        st.error("Something went wrong")
+
 
 # --- Career Peak ---
-elif page == "Career Peak":
-    st.markdown("### When do players peak - by position?")
+elif page == "[PEAK]  Career Peak":
+    st.markdown("### [PEAK] When do players peak — by position?")
 
     response = requests.get(f"{API_URL}/players/peak-age")
 
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
 
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5), facecolor="#0e1117")
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4), facecolor="#0e1117")
 
-        # Peak age bar
+        # Peak-alder per position
         ax = axes[0]
         ax.set_facecolor("#0e1117")
         colors = [
@@ -206,7 +282,7 @@ elif page == "Career Peak":
         for i, (pos, age) in enumerate(zip(df["position"], df["peak_age"])):
             ax.text(i, age + 0.3, str(age), ha="center", color="#c9d1d9", fontsize=9)
 
-        # Avg rating bar
+        # Gennemsnitsrating per position
         ax2 = axes[1]
         ax2.set_facecolor("#0e1117")
         ax2.bar(df["position"], df["avg_rating"], color="#388bfd", width=0.6)
@@ -224,9 +300,10 @@ elif page == "Career Peak":
 
         st.dataframe(df, use_container_width=True, hide_index=True)
 
+
 # --- World Map ---
-elif page == "World Map":
-    st.markdown("### Global Player Distribution")
+elif page == "[MAP]  World Map":
+    st.markdown("### [MAP] Global Player Distribution")
     st.markdown(
         "This map visualizes the nationality of all players in the dataset using GeoPandas."
     )
@@ -236,13 +313,12 @@ elif page == "World Map":
     if response.status_code == 200:
         counts_df = pd.DataFrame(response.json())
 
-        # Hent indbygget verdenskort fra geopandas
         # Hent verdenskortet direkte fra Natural Earth data
         world = gpd.read_file(
             "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
         )
 
-        # Map navne for at sikre bedre match (FIFA navne vs Kort navne)
+        # Map navne for at sikre bedre match (FIFA navne vs. kortnavn)
         name_map = {
             "United States": "United States of America",
             "England": "United Kingdom",
@@ -250,15 +326,14 @@ elif page == "World Map":
         }
         counts_df["country"] = counts_df["country"].replace(name_map)
 
-        # Merge FIFA data med verdenskort
+        # Merge FIFA-data med verdenskortet
         world = world.merge(counts_df, left_on="ADMIN", right_on="country", how="left")
         world["player_count"] = world["player_count"].fillna(0)
 
-        # Plotting
-        fig, ax = plt.subplots(1, 1, figsize=(15, 10), facecolor="#0e1117")
+        fig, ax = plt.subplots(1, 1, figsize=(15, 8), facecolor="#0e1117")
         ax.set_facecolor("#0e1117")
 
-        # Tegn kortet
+        # Tegn kortet med farveintensitet baseret på spillerantal
         world.plot(
             column="player_count",
             ax=ax,
@@ -267,13 +342,80 @@ elif page == "World Map":
             cmap="Blues",
             edgecolor="#2d333b",
             linewidth=0.5,
-            missing_kwds={"color": "#161b22"},  # Lande uden data bliver mørke
+            missing_kwds={"color": "#161b22"},
         )
 
         ax.set_axis_off()
         fig.tight_layout()
         st.pyplot(fig)
 
-        # Vis top 10 lande i en tabel nedenunder
+        # Top 10 lande i tabel under kortet
         st.markdown("#### Distribution Details")
         st.dataframe(counts_df.head(10), use_container_width=True, hide_index=True)
+
+
+# --- My Watchlist ---
+elif page == "[LIST]  Watchlist":
+    st.markdown("### [LIST] My Watchlist")
+
+    res = requests.get(f"{API_URL}/watchlist")
+    players = res.json()
+
+    if not players:
+        st.info(
+            "Your watchlist is empty — add players from Top Players or Hidden Gems."
+        )
+    else:
+        st.markdown(f"**{len(players)} players saved**")
+        st.divider()
+
+        # Vis hver spiller med metrics og slet-knap
+        for player in players:
+            col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
+            with col1:
+                st.markdown(
+                    f"**{player['short_name']}**  \n{player['nationality']} · {player['position']}"
+                )
+            with col2:
+                st.metric("Rating", player["overall"])
+            with col3:
+                st.metric("Potential", player["potential"])
+            with col4:
+                value_m = round(player["value_eur"] / 1_000_000, 1)
+                st.metric("Value", f"€{value_m}M")
+            with col5:
+                st.write("")
+                # Fjern spiller fra watchlisten via DELETE-endpoint
+                if st.button("Remove", key=f"del_{player['id']}"):
+                    del_res = requests.delete(f"{API_URL}/watchlist/{player['id']}")
+                    if del_res.status_code == 200:
+                        st.rerun()
+            st.divider()
+
+
+# --- Scout History ---
+elif page == "[LOG]  History":
+    st.markdown("### [LOG] Scout History")
+
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown("Your previous AI scout questions and answers")
+    with col2:
+        # Slet al historik via DELETE-endpoint
+        if st.button("Clear history"):
+            requests.delete(f"{API_URL}/scout/history")
+            st.rerun()
+
+    res = requests.get(f"{API_URL}/scout/history")
+    history = res.json()
+
+    if not history:
+        st.info("No history yet — ask the AI scout a question!")
+    else:
+        # Vis hvert spørgsmål/svar i en collapsible expander
+        for entry in history:
+            with st.expander(f"{entry['timestamp']}  |  {entry['query'][:60]}..."):
+                st.markdown(f"**Question:** {entry['query']}")
+                st.markdown(f"**Position:** {entry['position'] or 'Not specified'}")
+                st.divider()
+                st.markdown(f"**Answer:**  \n{entry['response']}")
