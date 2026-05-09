@@ -16,3 +16,6 @@ services:
     depends_on:
       - fastapi
     env_file: .env
+
+volumes:
+  sqlite_data: # Docker håndterer det automatisk - manuel setup ikke nødvendigt. 
