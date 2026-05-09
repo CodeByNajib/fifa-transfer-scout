@@ -38,7 +38,15 @@ def get_top_players(df: pd.DataFrame, position: str, top_n: int = 10) -> pd.Data
     """Return the best player for a given position."""
     filtered = df[df["player_positions"].str.contains(position.upper(), na=False)]
     return filtered.nlargest(top_n, "overall")[
-        ["short_name", "age", "overall", "potential", "value_eur", "club_name"]
+        [
+            "short_name",
+            "age",
+            "overall",
+            "potential",
+            "value_eur",
+            "club_name",
+            "player_positions",
+        ]
     ]
 
 
