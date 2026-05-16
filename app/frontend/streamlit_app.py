@@ -160,17 +160,17 @@ if page == "[TOP]  Players":
 
         # Tabel med watchlist-knap per spiller
         st.markdown("#### Player List")
-        for _, row in df.iterrows():
+        value_fmts = df["value_eur"].apply(lambda v: f"€{v / 1_000_000:.1f}M")
+        for row, value_fmt in zip(df.to_dict("records"), value_fmts):
             col1, col2 = st.columns([5, 1])
             with col1:
-                value_fmt = f"€{row['value_eur'] / 1_000_000:.1f}M"
                 st.markdown(
                     f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; {value_fmt}"
                 )
             with col2:
                 # Knap til at tilføje spilleren til watchlisten
                 if st.button("+ Watchlist", key=f"watch_top_{row['short_name']}"):
-                    res = requests.post(f"{API_URL}/watchlist", json=row.to_dict())
+                    res = requests.post(f"{API_URL}/watchlist", json=row)
                     if res.status_code == 200:
                         st.success(f"{row['short_name']} added!")
                     elif res.status_code == 409:
@@ -235,17 +235,17 @@ elif page == "[GEM]  Hidden Gems":
 
         # Tabel med watchlist-knap per spiller
         st.markdown("#### Player List")
-        for _, row in df.iterrows():
+        value_fmts = df["value_eur"].apply(lambda v: f"€{v / 1_000_000:.1f}M")
+        for row, value_fmt in zip(df.to_dict("records"), value_fmts):
             col1, col2 = st.columns([5, 1])
             with col1:
-                value_fmt = f"€{row['value_eur'] / 1_000_000:.1f}M"
                 st.markdown(
                     f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; Score: {row['value_score']:.1f} &nbsp;|&nbsp; {value_fmt}"
                 )
             with col2:
                 # Knap til at tilføje spilleren til watchlisten
                 if st.button("+ Watchlist", key=f"watch_gem_{row['short_name']}"):
-                    res = requests.post(f"{API_URL}/watchlist", json=row.to_dict())
+                    res = requests.post(f"{API_URL}/watchlist", json=row)
                     if res.status_code == 200:
                         st.success(f"{row['short_name']} added!")
                     elif res.status_code == 409:

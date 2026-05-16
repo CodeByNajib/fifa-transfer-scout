@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"\\\\.columns\\(\\\\|\\\\.button\\(\" //wsl.localhost/Ubuntu/home/lenovo_najib/fifa-transfer-scout/app/frontend/streamlit_app.py | wc -l)",
+      "Read(///wsl.localhost/Ubuntu/home/lenovo_najib/fifa-transfer-scout/app/frontend/**)"
+    ]
+  }
+}
