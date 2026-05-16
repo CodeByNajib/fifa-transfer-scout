@@ -6,6 +6,8 @@ import geopandas as gpd
 import os
 import plotly.express as px
 
+from app.api.constants import POSITIONS
+
 # Streamlit-kode bruger denne miljøvariabel
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
@@ -113,7 +115,7 @@ if page == "[TOP]  Players":
     with col1:
         position = st.selectbox(
             "",
-            ["ST", "CM", "CAM", "CB", "GK", "LW", "RW"],
+            POSITIONS,
             label_visibility="collapsed",
         )
     with col2:

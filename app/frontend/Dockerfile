@@ -15,9 +15,10 @@ RUN uv pip install --system -r requirements.txt
 ENV PATH="/root/.local/bin:$PATH"
 
 
-# 3. Kopier KUN frontend-mappen
+# 3. Kopier frontend og delte konstanter
 # Vi bevarer stien 'app/frontend/', så Streamlit-kommandoen stadig virker
 COPY app/frontend/ ./app/frontend
+COPY app/api/constants.py ./app/api/constants.py
 
 # 4. Opsætning
 ENV API_URL=http://fastapi:8000

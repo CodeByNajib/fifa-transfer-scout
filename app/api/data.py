@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
+from app.api.constants import POSITIONS
 
 # Ny sti: Kigger direkte i mappen hvor koden kører (eller i roden af containeren)
 DATA_PATH = Path("players_22.csv")
@@ -79,7 +80,7 @@ def get_undervalued_players(
 # Calculates peak age and average rating per position across all players
 def get_peak_age_by_position(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate average peak age per position."""
-    positions = ["GK", "CB", "CM", "CAM", "ST", "LW", "RW"]
+    positions = POSITIONS
     results = []
     for pos in positions:
         group = df[df["player_positions"].str.contains(pos, na=False)]
