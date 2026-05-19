@@ -23,7 +23,7 @@ def render_watchlist_button(row: dict, prefix: str) -> None:
 
 st.set_page_config(
     page_title="FIFA Transfer Scout",
-    page_icon="app/frontend/assets/logo.png",
+    page_icon="app/frontend/assets/favicon.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
