@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-from app.api.constants import POSITIONS
+from app.api.constants import POSITIONS, MIN_OVERALL_RATING
 
 # Ny sti: Kigger direkte i mappen hvor koden kører (eller i roden af containeren)
 DATA_PATH = Path("players_22.csv")
@@ -58,7 +58,7 @@ def get_undervalued_players(
     """Find players with high rating relative to their market value."""
     budget_players = df[
         (df["value_eur"] <= max_value)
-        & (df["overall"] >= 75)
+        & (df["overall"] >= MIN_OVERALL_RATING)
         & (~df["player_positions"].str.contains("GK", na=False))
     ].copy()
     budget_players["value_score"] = budget_players["overall"] / (

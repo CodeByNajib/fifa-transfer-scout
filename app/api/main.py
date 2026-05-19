@@ -16,6 +16,7 @@ from app.api.database import (
 from app.api.database import add_to_watchlist, get_watchlist, remove_from_watchlist
 
 # Import af mine egne moduler fra projektstrukturen
+from app.api.constants import DEFAULT_MAX_VALUE
 from app.api.data import (
     load_data,
     get_top_players,
@@ -68,7 +69,7 @@ def top_players(request: Request, position: str, top_n: int = 10):
 
 # Returnerer undervurderede spillere under en specifik markedsværdi i EUR
 @app.get("/players/undervalued")
-def undervalued_players(request: Request, max_value: float = 10_000_000, top_n: int = 10):
+def undervalued_players(request: Request, max_value: float = DEFAULT_MAX_VALUE, top_n: int = 10):
     result = get_undervalued_players(request.app.state.df, max_value, top_n)
     if result.empty:
         raise HTTPException(status_code=404, detail="No undervalued players found")

@@ -3,6 +3,8 @@ from mistralai.client import Mistral
 from dotenv import load_dotenv
 import pandas as pd
 
+from app.api.constants import MISTRAL_MODEL
+
 load_dotenv()
 
 # Initialize Mistral client using API key from .env
@@ -23,6 +25,6 @@ def ask_scout_assistant(question: str, context_df: pd.DataFrame) -> str:
     Question: {question}
     """
     response = client.chat.complete(
-        model="mistral-small-latest", messages=[{"role": "user", "content": prompt}]
+        model=MISTRAL_MODEL, messages=[{"role": "user", "content": prompt}]
     )
     return response.choices[0].message.content
