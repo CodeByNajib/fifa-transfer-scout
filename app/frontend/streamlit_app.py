@@ -23,7 +23,7 @@ def render_watchlist_button(row: dict, prefix: str) -> None:
 
 st.set_page_config(
     page_title="FIFA Transfer Scout",
-    page_icon="assets/logo.png" if False else None,
+    page_icon="app/frontend/assets/logo.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -90,6 +90,7 @@ st.markdown(
 
 # Sidebar navigationsknapper
 with st.sidebar:
+    st.image("app/frontend/assets/logo.png", use_container_width=True)
     st.markdown("### Analysis Mode")
     st.markdown("---")
 
