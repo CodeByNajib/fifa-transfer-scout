@@ -101,6 +101,7 @@ with st.sidebar:
         "[LIST]  Watchlist",
         "[LOG]  History",
         "[AI]  Scout Assistant",
+        "[NEWS]  Live Football",
     ]
 
     # Vis en knap per side — klik sætter session state
@@ -426,6 +427,92 @@ elif page == "[AI]  Scout Assistant":
             st.markdown(ask_response.json().get("answer", ""))
         else:
             handle_api_error(ask_response)
+
+
+# --- Live Football News ---
+elif page == "[NEWS]  Live Football":
+    st.markdown("### [NEWS] Live Football — Today's Matches")
+
+    response = requests.get(f"{API_URL}/transfers/news")
+
+    if response.status_code == 200:
+        data = response.json()
+
+        if "error" in data:
+            st.error(f"Could not fetch live data: {data.get('details', '')}")
+        else:
+            matches = data.get("matches", [])
+
+            if not matches:
+                st.info("No matches found for today.")
+            else:
+                STATUS_COLORS = {
+                    "FINISHED": "#3fb950",
+                    "IN_PLAY": "#58a6ff",
+                    "PAUSED": "#d29922",
+                    "SCHEDULED": "#8b949e",
+                    "POSTPONED": "#f85149",
+                    "CANCELLED": "#f85149",
+                    "SUSPENDED": "#d29922",
+                }
+
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Matches", len(matches))
+                c2.metric(
+                    "Live",
+                    sum(1 for m in matches if m.get("status") in ("IN_PLAY", "PAUSED")),
+                )
+                c3.metric(
+                    "Finished",
+                    sum(1 for m in matches if m.get("status") == "FINISHED"),
+                )
+
+                st.markdown("---")
+
+                for match in matches:
+                    home = match.get("homeTeam", {}).get("name", "Unknown")
+                    away = match.get("awayTeam", {}).get("name", "Unknown")
+                    utc_date = match.get("utcDate", "")
+                    status = match.get("status", "SCHEDULED")
+                    score = match.get("score", {}).get("fullTime", {})
+                    home_score = score.get("home")
+                    away_score = score.get("away")
+
+                    try:
+                        dt = pd.to_datetime(utc_date).strftime("%d %b %Y  %H:%M UTC")
+                    except Exception:
+                        dt = utc_date
+
+                    color = STATUS_COLORS.get(status, "#8b949e")
+                    score_str = (
+                        f"**{home_score} – {away_score}**"
+                        if home_score is not None and away_score is not None
+                        else "vs"
+                    )
+
+                    col1, col2, col3 = st.columns([4, 2, 2])
+                    with col1:
+                        st.markdown(f"**{home}** &nbsp; {score_str} &nbsp; **{away}**")
+                        st.markdown(
+                            f'<span style="color:#8b949e; font-size:0.8rem;">{dt}</span>',
+                            unsafe_allow_html=True,
+                        )
+                    with col2:
+                        competition = (
+                            match.get("competition", {}).get("name", "")
+                        )
+                        st.markdown(
+                            f'<span style="color:#8b949e; font-size:0.8rem;">{competition}</span>',
+                            unsafe_allow_html=True,
+                        )
+                    with col3:
+                        st.markdown(
+                            f'<span style="color:{color}; font-size:0.8rem; font-weight:600;">{status}</span>',
+                            unsafe_allow_html=True,
+                        )
+                    st.divider()
+    else:
+        handle_api_error(response)
 
 
 # --- Scout History ---
