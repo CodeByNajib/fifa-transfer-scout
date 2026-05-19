@@ -7,7 +7,7 @@ import os
 import plotly.express as px
 
 from app.api.constants import POSITIONS
-from app.api.utils import format_market_value
+from app.api.utils import format_market_value, handle_api_error
 
 # Streamlit-kode bruger denne miljøvariabel
 API_URL = os.getenv("API_URL", "http://localhost:8000")
@@ -18,10 +18,8 @@ def render_watchlist_button(row: dict, prefix: str) -> None:
         res = requests.post(f"{API_URL}/watchlist", json=row)
         if res.status_code == 200:
             st.success(f"{row['short_name']} added!")
-        elif res.status_code == 409:
-            st.warning(res.json()["detail"])
         else:
-            st.error("Something went wrong")
+            handle_api_error(res)
 
 st.set_page_config(
     page_title="FIFA Transfer Scout",
@@ -183,6 +181,8 @@ if page == "[TOP]  Players":
                 )
             with col2:
                 render_watchlist_button(row, "watch_top")
+    else:
+        handle_api_error(response)
 
 
 # --- Hidden Gems ---
@@ -250,6 +250,8 @@ elif page == "[GEM]  Hidden Gems":
                 )
             with col2:
                 render_watchlist_button(row, "watch_gem")
+    else:
+        handle_api_error(response)
 
 
 # --- Career Peak ---
@@ -297,6 +299,8 @@ elif page == "[PEAK]  Career Peak":
         st.pyplot(fig)
 
         st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        handle_api_error(response)
 
 
 # --- World Map ---
@@ -350,6 +354,8 @@ elif page == "[MAP]  World Map":
         # Top 10 lande i tabel under kortet
         st.markdown("#### Distribution Details")
         st.dataframe(counts_df.head(10), use_container_width=True, hide_index=True)
+    else:
+        handle_api_error(response)
 
 
 # --- My Watchlist ---
@@ -357,6 +363,8 @@ elif page == "[LIST]  Watchlist":
     st.markdown("### [LIST] My Watchlist")
 
     res = requests.get(f"{API_URL}/watchlist")
+    if handle_api_error(res):
+        st.stop()
     players = res.json()
 
     if not players:
@@ -387,6 +395,8 @@ elif page == "[LIST]  Watchlist":
                     del_res = requests.delete(f"{API_URL}/watchlist/{player['id']}")
                     if del_res.status_code == 200:
                         st.rerun()
+                    else:
+                        handle_api_error(del_res)
             st.divider()
 
 
@@ -400,10 +410,13 @@ elif page == "[LOG]  History":
     with col2:
         # Slet al historik via DELETE-endpoint
         if st.button("Clear history"):
-            requests.delete(f"{API_URL}/scout/history")
-            st.rerun()
+            del_res = requests.delete(f"{API_URL}/scout/history")
+            if not handle_api_error(del_res):
+                st.rerun()
 
     res = requests.get(f"{API_URL}/scout/history")
+    if handle_api_error(res):
+        st.stop()
     history = res.json()
 
     if not history:
