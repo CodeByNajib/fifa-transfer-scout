@@ -7,6 +7,7 @@ import os
 import plotly.express as px
 
 from app.api.constants import POSITIONS
+from app.api.utils import format_market_value
 
 # Streamlit-kode bruger denne miljøvariabel
 API_URL = os.getenv("API_URL", "http://localhost:8000")
@@ -132,7 +133,7 @@ if page == "[TOP]  Players":
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg. Rating", f"{df['overall'].mean():.1f}")
         c2.metric("Avg. Age", f"{df['age'].mean():.1f} yrs")
-        c3.metric("Avg. Value", f"€{df['value_eur'].mean() / 1_000_000:.1f}M")
+        c3.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
 
         # Vandret søjlediagram
         fig, ax = plt.subplots(figsize=(8, top_n * 0.4 + 1), facecolor="#0e1117")
@@ -162,7 +163,7 @@ if page == "[TOP]  Players":
 
         # Tabel med watchlist-knap per spiller
         st.markdown("#### Player List")
-        value_fmts = df["value_eur"].apply(lambda v: f"€{v / 1_000_000:.1f}M")
+        value_fmts = df["value_eur"].apply(format_market_value)
         for row, value_fmt in zip(df.to_dict("records"), value_fmts):
             col1, col2 = st.columns([5, 1])
             with col1:
@@ -201,7 +202,7 @@ elif page == "[GEM]  Hidden Gems":
 
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg. Rating", f"{df['overall'].mean():.1f}")
-        c2.metric("Avg. Value", f"€{df['value_eur'].mean() / 1_000_000:.1f}M")
+        c2.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
         c3.metric("Best value score", f"{df['value_score'].max():.1f}")
 
         # Scatter: rating vs. markedsværdi — hover viser spillernavn interaktivt
@@ -237,7 +238,7 @@ elif page == "[GEM]  Hidden Gems":
 
         # Tabel med watchlist-knap per spiller
         st.markdown("#### Player List")
-        value_fmts = df["value_eur"].apply(lambda v: f"€{v / 1_000_000:.1f}M")
+        value_fmts = df["value_eur"].apply(format_market_value)
         for row, value_fmt in zip(df.to_dict("records"), value_fmts):
             col1, col2 = st.columns([5, 1])
             with col1:
@@ -383,8 +384,7 @@ elif page == "[LIST]  Watchlist":
             with col3:
                 st.metric("Potential", player["potential"])
             with col4:
-                value_m = round(player["value_eur"] / 1_000_000, 1)
-                st.metric("Value", f"€{value_m}M")
+                st.metric("Value", format_market_value(player["value_eur"]))
             with col5:
                 st.write("")
                 # Fjern spiller fra watchlisten via DELETE-endpoint
