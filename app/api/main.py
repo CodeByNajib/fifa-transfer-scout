@@ -1,5 +1,5 @@
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import List
 import os
@@ -39,8 +39,7 @@ class ScoutQuery(BaseModel):
 @app.on_event("startup")
 def startup_event():
     # Indlæs datasættet og opret databasetabeller ved opstart
-    global df
-    df = load_data()
+    app.state.df = load_data()
     init_db()
 
 
@@ -57,9 +56,9 @@ def read_root():
 
 # Returnerer en liste over de bedste spillere for en given position
 @app.get("/players/top/{position}")
-def top_players(position: str, top_n: int = 10):
+def top_players(request: Request, position: str, top_n: int = 10):
     # Konverterer position til store bogstaver for at matche datasættet (f.eks. 'st' -> 'ST')
-    result = get_top_players(df, position.upper(), top_n)
+    result = get_top_players(request.app.state.df, position.upper(), top_n)
     if result.empty:
         raise HTTPException(
             status_code=404, detail=f"No players found for position: {position}"
@@ -69,8 +68,8 @@ def top_players(position: str, top_n: int = 10):
 
 # Returnerer undervurderede spillere under en specifik markedsværdi i EUR
 @app.get("/players/undervalued")
-def undervalued_players(max_value: float = 10_000_000, top_n: int = 10):
-    result = get_undervalued_players(df, max_value, top_n)
+def undervalued_players(request: Request, max_value: float = 10_000_000, top_n: int = 10):
+    result = get_undervalued_players(request.app.state.df, max_value, top_n)
     if result.empty:
         raise HTTPException(status_code=404, detail="No undervalued players found")
     return result.to_dict(orient="records")
@@ -78,8 +77,8 @@ def undervalued_players(max_value: float = 10_000_000, top_n: int = 10):
 
 # Returnerer gennemsnitlig peak-alder og rating per position
 @app.get("/players/peak-age")
-def peak_age():
-    result = get_peak_age_by_position(df)
+def peak_age(request: Request):
+    result = get_peak_age_by_position(request.app.state.df)
     return result.to_dict(orient="records")
 
 
@@ -116,8 +115,8 @@ def ask_scout(payload: ScoutQuery):
 
 # Geografisk endpoint: Så Streamlit kan hente nationalitetsdata
 @app.get("/players/nationality")
-def player_nationality():
-    result = get_nationality_counts(df)
+def player_nationality(request: Request):
+    result = get_nationality_counts(request.app.state.df)
     return result.to_dict(orient="records")
 
 
