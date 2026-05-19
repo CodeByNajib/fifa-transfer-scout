@@ -19,6 +19,7 @@ ENV PATH="/root/.local/bin:$PATH"
 # Vi bevarer stien 'app/frontend/', så Streamlit-kommandoen stadig virker
 COPY app/frontend/ ./app/frontend
 COPY app/api/constants.py ./app/api/constants.py
+COPY app/api/utils.py ./app/api/utils.py
 
 # 4. Opsætning
 ENV API_URL=http://fastapi:8000
