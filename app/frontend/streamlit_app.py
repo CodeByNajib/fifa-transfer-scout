@@ -100,6 +100,7 @@ with st.sidebar:
         "[MAP]  World Map",
         "[LIST]  Watchlist",
         "[LOG]  History",
+        "[AI]  Scout Assistant",
     ]
 
     # Vis en knap per side — klik sætter session state
@@ -398,6 +399,33 @@ elif page == "[LIST]  Watchlist":
                     else:
                         handle_api_error(del_res)
             st.divider()
+
+
+# --- AI Scout Assistant ---
+elif page == "[AI]  Scout Assistant":
+    st.markdown("### [AI] Scout Assistant")
+    st.markdown("Ask the AI scout anything about players for a specific position.")
+
+    position = st.selectbox("Select position", POSITIONS, label_visibility="visible")
+
+    top_response = requests.get(f"{API_URL}/players/top/{position}", params={"top_n": 10})
+    if handle_api_error(top_response):
+        st.stop()
+    context_data = top_response.json()
+
+    query = st.text_area("Your question", placeholder="e.g. Who is the best value-for-money striker?", height=100)
+
+    if st.button("Ask Scout") and query.strip():
+        with st.spinner("Thinking..."):
+            ask_response = requests.post(
+                f"{API_URL}/players/ask-scout",
+                json={"query": query, "context_data": context_data},
+            )
+        if ask_response.status_code == 200:
+            st.markdown("#### Scout Answer")
+            st.markdown(ask_response.json().get("answer", ""))
+        else:
+            handle_api_error(ask_response)
 
 
 # --- Scout History ---
