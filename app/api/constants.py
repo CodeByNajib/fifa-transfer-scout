@@ -2,4 +2,4 @@ POSITIONS = ["GK", "CB", "CM", "CAM", "ST", "LW", "RW"]
 
 MIN_OVERALL_RATING = 75
 DEFAULT_MAX_VALUE = 10_000_000
-MISTRAL_MODEL = "mistral-small-latest"
+MISTRAL_MODEL = "open-mistral-7b"
