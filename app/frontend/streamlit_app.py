@@ -28,7 +28,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS — dark scouting aesthetic
+# Custom CSS - dark scouting aesthetic
 st.markdown(
     """
 <style>
@@ -47,7 +47,7 @@ st.markdown(
 
 st.markdown('<p class="scout-title">FIFA TRANSFER SCOUT</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="scout-sub">FIFA 22 — Data-driven player analysis</p>',
+    '<p class="scout-sub">FIFA 22 - Data-driven player analysis</p>',
     unsafe_allow_html=True,
 )
 
@@ -104,7 +104,7 @@ with st.sidebar:
         "[NEWS]  Live Football",
     ]
 
-    # Vis en knap per side — klik sætter session state
+    # Vis en knap per side - klik sætter session state
     for p in pages:
         if st.button(p, key=f"nav_{p}"):
             st.session_state.page = p
@@ -189,7 +189,7 @@ if page == "[TOP]  Players":
 
 # --- Hidden Gems ---
 elif page == "[GEM]  Hidden Gems":
-    st.markdown("### [GEM] Undervalued players — high quality, low cost")
+    st.markdown("### [GEM] Undervalued players - high quality, low cost")
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -210,7 +210,7 @@ elif page == "[GEM]  Hidden Gems":
         c2.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
         c3.metric("Best value score", f"{df['value_score'].max():.1f}")
 
-        # Scatter: rating vs. markedsværdi — hover viser spillernavn interaktivt
+        # Scatter: rating vs. markedsværdi - hover viser spillernavn interaktivt
         fig = px.scatter(
             df,
             x=df["value_eur"] / 1_000_000,
@@ -258,7 +258,7 @@ elif page == "[GEM]  Hidden Gems":
 
 # --- Career Peak ---
 elif page == "[PEAK]  Career Peak":
-    st.markdown("### [PEAK] When do players peak — by position?")
+    st.markdown("### [PEAK] When do players peak - by position?")
 
     response = requests.get(f"{API_URL}/players/peak-age")
 
@@ -371,7 +371,7 @@ elif page == "[LIST]  Watchlist":
 
     if not players:
         st.info(
-            "Your watchlist is empty — add players from Top Players or Hidden Gems."
+            "Your watchlist is empty - add players from Top Players or Hidden Gems."
         )
     else:
         st.markdown(f"**{len(players)} players saved**")
@@ -431,7 +431,7 @@ elif page == "[AI]  Scout Assistant":
 
 # --- Live Football News ---
 elif page == "[NEWS]  Live Football":
-    st.markdown("### [NEWS] Live Football — Today's Matches")
+    st.markdown("### [NEWS] Live Football - Today's Matches")
 
     response = requests.get(f"{API_URL}/transfers/news")
 
@@ -535,7 +535,7 @@ elif page == "[LOG]  History":
     history = res.json()
 
     if not history:
-        st.info("No history yet — ask the AI scout a question!")
+        st.info("No history yet - ask the AI scout a question!")
     else:
         # Vis hvert spørgsmål/svar i en collapsible expander
         for entry in history:

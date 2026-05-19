@@ -74,7 +74,7 @@ def clear_scout_history() -> None:
 
 
 def add_to_watchlist(player: dict) -> dict:
-    # Tilføjer en spiller til watchlisten — UNIQUE(short_name) forhindrer duplikater
+    # Tilføjer en spiller til watchlisten - UNIQUE(short_name) forhindrer duplikater
     with get_connection() as conn:
         try:
             conn.execute(
@@ -111,7 +111,7 @@ def get_watchlist() -> list[dict]:
 
 
 def remove_from_watchlist(player_id: int) -> dict:
-    # Fjerner en spiller fra watchlisten via ID — rowcount 0 betyder spilleren ikke fandtes
+    # Fjerner en spiller fra watchlisten via ID - rowcount 0 betyder spilleren ikke fandtes
     with get_connection() as conn:
         cursor = conn.execute("DELETE FROM watchlist WHERE id = ?", (player_id,))
     if cursor.rowcount == 0:
