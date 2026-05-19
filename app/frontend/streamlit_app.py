@@ -90,7 +90,7 @@ st.markdown(
 
 # Sidebar navigationsknapper
 with st.sidebar:
-    st.image("app/frontend/assets/logo.png", use_container_width=True)
+    st.image("app/frontend/assets/logo.png", width="stretch")
     st.markdown("### Analysis Mode")
     st.markdown("---")
 
@@ -127,7 +127,7 @@ if page == "[TOP]  Players":
     col1, col2 = st.columns([2, 1])
     with col1:
         position = st.selectbox(
-            "",
+            "Position",
             POSITIONS,
             label_visibility="collapsed",
         )
@@ -240,7 +240,7 @@ elif page == "[GEM]  Hidden Gems":
             xaxis=dict(gridcolor="#2d333b"),
             coloraxis_colorbar=dict(title="Score"),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         # Tabel med watchlist-knap per spiller
         st.markdown("#### Player List")
@@ -301,7 +301,7 @@ elif page == "[PEAK]  Career Peak":
         fig.tight_layout()
         st.pyplot(fig)
 
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
     else:
         handle_api_error(response)
 
@@ -356,7 +356,7 @@ elif page == "[MAP]  World Map":
 
         # Top 10 lande i tabel under kortet
         st.markdown("#### Distribution Details")
-        st.dataframe(counts_df.head(10), use_container_width=True, hide_index=True)
+        st.dataframe(counts_df.head(10), width="stretch", hide_index=True)
     else:
         handle_api_error(response)
 
