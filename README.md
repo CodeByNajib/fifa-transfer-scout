@@ -75,16 +75,16 @@ streamlit run app/frontend/streamlit_app.py
 │   │   ├── data.py        # Data loading and analysis logic
 │   │   ├── database.py    # SQLite persistence (watchlist + scout history)
 │   │   ├── scout_ai.py    # Mistral AI RAG-light integration
+│   │   ├── constants.py   # Shared constants
+│   │   ├── utils.py       # Shared utility functions
 │   │   └── Dockerfile
 │   ├── frontend/
 │   │   ├── streamlit_app.py  # Streamlit dashboard
+│   │   ├── assets/           # Static assets (logo, favicon)
 │   │   └── Dockerfile
 │   └── tests/
 │       ├── test_data.py      # Pytest suite for data logic
 │       └── test_database.py  # Pytest suite for database logic
-├── assets/                    # Static assets (images, icons)
-├── constants.py               # Shared constants
-├── utils.py                   # Shared utility functions
 ├── docker-compose.yml
 ├── requirements.txt
 └── README.md
