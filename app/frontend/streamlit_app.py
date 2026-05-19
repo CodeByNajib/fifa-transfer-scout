@@ -12,6 +12,17 @@ from app.api.utils import format_market_value
 # Streamlit-kode bruger denne miljøvariabel
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
+
+def render_watchlist_button(row: dict, prefix: str) -> None:
+    if st.button("+ Watchlist", key=f"{prefix}_{row['short_name']}"):
+        res = requests.post(f"{API_URL}/watchlist", json=row)
+        if res.status_code == 200:
+            st.success(f"{row['short_name']} added!")
+        elif res.status_code == 409:
+            st.warning(res.json()["detail"])
+        else:
+            st.error("Something went wrong")
+
 st.set_page_config(
     page_title="FIFA Transfer Scout",
     page_icon="assets/logo.png" if False else None,
@@ -171,15 +182,7 @@ if page == "[TOP]  Players":
                     f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; {value_fmt}"
                 )
             with col2:
-                # Knap til at tilføje spilleren til watchlisten
-                if st.button("+ Watchlist", key=f"watch_top_{row['short_name']}"):
-                    res = requests.post(f"{API_URL}/watchlist", json=row)
-                    if res.status_code == 200:
-                        st.success(f"{row['short_name']} added!")
-                    elif res.status_code == 409:
-                        st.warning(res.json()["detail"])
-                    else:
-                        st.error("Something went wrong")
+                render_watchlist_button(row, "watch_top")
 
 
 # --- Hidden Gems ---
@@ -246,15 +249,7 @@ elif page == "[GEM]  Hidden Gems":
                     f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; Score: {row['value_score']:.1f} &nbsp;|&nbsp; {value_fmt}"
                 )
             with col2:
-                # Knap til at tilføje spilleren til watchlisten
-                if st.button("+ Watchlist", key=f"watch_gem_{row['short_name']}"):
-                    res = requests.post(f"{API_URL}/watchlist", json=row)
-                    if res.status_code == 200:
-                        st.success(f"{row['short_name']} added!")
-                    elif res.status_code == 409:
-                        st.warning(res.json()["detail"])
-                    else:
-                        st.error("Something went wrong")
+                render_watchlist_button(row, "watch_gem")
 
 
 # --- Career Peak ---
