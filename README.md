@@ -12,11 +12,12 @@ Explore and analyze FIFA player data through an interactive dashboard with AI-po
 - **Career Peak Analytics:** Discover peak age and average ratings per position.
 - **Watchlist:** Save and manage players of interest across sessions, persisted in SQLite.
 - **Scout History:** Review previous AI scout queries and responses, persisted in SQLite.
+- **Live Football News:** Browse the latest football transfer news and headlines powered by the Football-Data API.
 - **Dockerized Architecture:** Fully containerized microservices (API + Frontend) with persistent SQLite volume.
 
 ## Tech Stack
 
-- **Backend:** FastAPI (Python 3.12)
+- **Backend:** FastAPI (Python 3.14)
 - **Frontend:** Streamlit
 - **AI Engine:** Mistral AI API
 - **Database:** SQLite (persistent via Docker volume)
@@ -79,7 +80,11 @@ streamlit run app/frontend/streamlit_app.py
 │   │   ├── streamlit_app.py  # Streamlit dashboard
 │   │   └── Dockerfile
 │   └── tests/
-│       └── test_data.py   # Pytest suite
+│       ├── test_data.py      # Pytest suite for data logic
+│       └── test_database.py  # Pytest suite for database logic
+├── assets/                    # Static assets (images, icons)
+├── constants.py               # Shared constants
+├── utils.py                   # Shared utility functions
 ├── docker-compose.yml
 ├── requirements.txt
 └── README.md
