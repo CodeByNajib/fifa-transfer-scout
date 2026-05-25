@@ -3,14 +3,14 @@ from pathlib import Path
 
 from app.api.constants import POSITIONS, MIN_OVERALL_RATING
 
-# Ny sti: Kigger direkte i mappen hvor koden kører (eller i roden af containeren)
+# New path: looks directly in the folder where the code runs (or in the container root)
 DATA_PATH = Path("players_22.csv")
 
 
 # Loads and cleans the FIFA 22 player dataset from the data directory
 def load_data() -> pd.DataFrame:
     """Load and clean FIFA 22 player dataset."""
-    # Tilføjer check for at se om filen findes, så jeg får en pæn fejlbesked
+    # Checks if the file exists to produce a clear error message
     if not DATA_PATH.exists():
         raise FileNotFoundError(f"Could not find {DATA_PATH}. Check the path!")
 

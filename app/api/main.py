@@ -6,7 +6,7 @@ import os
 import httpx
 from dotenv import load_dotenv
 
-# SQLite databasefunktioner
+# SQLite database functions
 from app.api.database import (
     init_db,
     save_scout_query,
@@ -15,7 +15,7 @@ from app.api.database import (
 )
 from app.api.database import add_to_watchlist, get_watchlist, remove_from_watchlist
 
-# Import af mine egne moduler fra projektstrukturen
+# Import of project modules
 from app.api.constants import DEFAULT_MAX_VALUE
 from app.api.data import (
     load_data,
@@ -31,15 +31,15 @@ load_dotenv()
 app = FastAPI(title="FIFA Transfer Scout API")
 
 
-# Datavalideringsmodel til AI-forespørgsler (sikrer korrekt dataoverførsel fra Streamlit)
+# Data validation model for AI queries (ensures correct data transfer from Streamlit)
 class ScoutQuery(BaseModel):
     query: str
-    context_data: List[dict]  # Liste af spillere som fungerer som kontekst for AI'en
+    context_data: List[dict]  # List of players that serve as context for the AI
 
 
 @app.on_event("startup")
 def startup_event():
-    # Indlæs datasættet og opret databasetabeller ved opstart
+    # Load the dataset and create database tables on startup
     app.state.df = load_data()
     init_db()
 
@@ -47,7 +47,7 @@ def startup_event():
 # --- PLAYER ENDPOINTS ---
 
 
-# Root endpoint til hurtig verificering af at serveren kører
+# Root endpoint for quick verification that the server is running
 @app.get("/")
 def read_root():
     return {
@@ -55,10 +55,10 @@ def read_root():
     }
 
 
-# Returnerer en liste over de bedste spillere for en given position
+# Returns a list of the best players for a given position
 @app.get("/players/top/{position}")
 def top_players(request: Request, position: str, top_n: int = 10):
-    # Konverterer position til store bogstaver for at matche datasættet (f.eks. 'st' -> 'ST')
+    # Converts position to uppercase to match the dataset (e.g. 'st' -> 'ST')
     result = get_top_players(request.app.state.df, position.upper(), top_n)
     if result.empty:
         raise HTTPException(
@@ -67,7 +67,7 @@ def top_players(request: Request, position: str, top_n: int = 10):
     return result.to_dict(orient="records")
 
 
-# Returnerer undervurderede spillere under en specifik markedsværdi i EUR
+# Returns undervalued players below a specific market value in EUR
 @app.get("/players/undervalued")
 def undervalued_players(request: Request, max_value: float = DEFAULT_MAX_VALUE, top_n: int = 10):
     result = get_undervalued_players(request.app.state.df, max_value, top_n)
@@ -76,30 +76,30 @@ def undervalued_players(request: Request, max_value: float = DEFAULT_MAX_VALUE, 
     return result.to_dict(orient="records")
 
 
-# Returnerer gennemsnitlig peak-alder og rating per position
+# Returns average peak age and rating per position
 @app.get("/players/peak-age")
 def peak_age(request: Request):
     result = get_peak_age_by_position(request.app.state.df)
     return result.to_dict(orient="records")
 
 
-# AI Scout endpoint: Forbinder filtreret data med Mistral AI (RAG-light logik)
+# AI Scout endpoint: connects filtered data with Mistral AI (RAG-light logic)
 @app.post("/players/ask-scout")
 def ask_scout(payload: ScoutQuery):
-    # Validerer at der er sendt spillerdata med forespørgslen
+    # Validates that player data has been provided with the request
     if not payload.context_data:
         raise HTTPException(
             status_code=400, detail="No player data provided as context."
         )
 
-    # Konverterer den modtagne JSON-data tilbage til en Pandas DataFrame
+    # Converts the received JSON data back to a Pandas DataFrame
     context_df = pd.DataFrame(payload.context_data)
 
     try:
-        # Kalder AI-assistenten med den korrekte import-logik (Mistral client)
+        # Calls the AI assistant with the correct import logic (Mistral client)
         answer = ask_scout_assistant(payload.query, context_df)
 
-        # Gemmer spørgsmål og svar i SQLite databasen
+        # Saves the question and answer in the SQLite database
         save_scout_query(
             query=payload.query,
             response=answer,
@@ -110,21 +110,21 @@ def ask_scout(payload: ScoutQuery):
 
         return {"answer": answer}
     except Exception as e:
-        # Returnerer en 500-fejl hvis der opstår problemer med API-kaldet til Mistral
+        # Returns a 500 error if problems occur with the API call to Mistral
         raise HTTPException(status_code=500, detail=f"AI Assistant error: {str(e)}")
 
 
-# Geografisk endpoint: Så Streamlit kan hente nationalitetsdata
+# Geographic endpoint: allows Streamlit to fetch nationality data
 @app.get("/players/nationality")
 def player_nationality(request: Request):
     result = get_nationality_counts(request.app.state.df)
     return result.to_dict(orient="records")
 
 
-# Live kampdata fra football-data.org (krav i opgavebeskrivelse)
+# Live match data from football-data.org (project requirement)
 @app.get("/transfers/news")
 async def get_football_news():
-    # Henter aktuelle fodboldkampe og resultater fra et eksternt API
+    # Fetches current football matches and results from an external API
     api_key = os.getenv("FOOTBALL_DATA_API_KEY")
     url = "https://api.football-data.org/v4/matches"
     headers = {"X-Auth-Token": api_key}
@@ -139,13 +139,13 @@ async def get_football_news():
 # --- SCOUT HISTORY ENDPOINTS ---
 
 
-# Returnerer de seneste AI-scout spørgsmål og svar
+# Returns the most recent AI scout questions and answers
 @app.get("/scout/history")
 def scout_history(limit: int = 20):
     return get_scout_history(limit=limit)
 
 
-# Sletter al scout historik
+# Deletes all scout history
 @app.delete("/scout/history")
 def delete_scout_history():
     clear_scout_history()
@@ -155,7 +155,7 @@ def delete_scout_history():
 # --- WATCHLIST ENDPOINTS ---
 
 
-# Tilføjer en spiller til watchlisten
+# Adds a player to the watchlist
 @app.post("/watchlist")
 def watchlist_add(player: dict):
     result = add_to_watchlist(player)
@@ -164,13 +164,13 @@ def watchlist_add(player: dict):
     return result
 
 
-# Returnerer alle spillere i watchlisten
+# Returns all players in the watchlist
 @app.get("/watchlist")
 def watchlist_get():
     return get_watchlist()
 
 
-# Fjerner en spiller fra watchlisten via ID
+# Removes a player from the watchlist by ID
 @app.delete("/watchlist/{player_id}")
 def watchlist_remove(player_id: int):
     result = remove_from_watchlist(player_id)

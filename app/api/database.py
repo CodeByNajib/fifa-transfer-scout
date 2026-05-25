@@ -6,7 +6,7 @@ DB_PATH = Path("/app/data/scout.db")
 
 
 def get_connection() -> sqlite3.Connection:
-    # Opretter forbindelse til SQLite databasen og returnerer dict-lignende rows
+    # Creates a connection to the SQLite database and returns dict-like rows
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -14,7 +14,7 @@ def get_connection() -> sqlite3.Connection:
 
 
 def init_db() -> None:
-    # Opretter tabeller ved første opstart hvis de ikke allerede findes
+    # Creates tables on first startup if they don't already exist
     with get_connection() as conn:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS scout_history (
@@ -40,11 +40,11 @@ def init_db() -> None:
         """)
 
 
-# ─── Scout historik ───────────────────────────────────────────────────────────
+# ─── Scout history ────────────────────────────────────────────────────────────
 
 
 def save_scout_query(query: str, response: str, position: str | None) -> None:
-    # Gemmer AI-scout spørgsmål og svar i databasen med tidsstempel
+    # Saves AI scout questions and answers in the database with a timestamp
     with get_connection() as conn:
         conn.execute(
             """
@@ -56,7 +56,7 @@ def save_scout_query(query: str, response: str, position: str | None) -> None:
 
 
 def get_scout_history(limit: int = 20) -> list[dict]:
-    # Henter de seneste AI-scout beskeder sorteret med nyeste først
+    # Fetches the most recent AI scout messages sorted with newest first
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM scout_history ORDER BY id DESC LIMIT ?", (limit,)
@@ -65,7 +65,7 @@ def get_scout_history(limit: int = 20) -> list[dict]:
 
 
 def clear_scout_history() -> None:
-    # Sletter al scout historik fra databasen
+    # Deletes all scout history from the database
     with get_connection() as conn:
         conn.execute("DELETE FROM scout_history")
 
@@ -74,7 +74,7 @@ def clear_scout_history() -> None:
 
 
 def add_to_watchlist(player: dict) -> dict:
-    # Tilføjer en spiller til watchlisten - UNIQUE(short_name) forhindrer duplikater
+    # Adds a player to the watchlist - UNIQUE(short_name) prevents duplicates
     with get_connection() as conn:
         try:
             conn.execute(
@@ -96,7 +96,7 @@ def add_to_watchlist(player: dict) -> dict:
             )
             return {"added": True}
         except sqlite3.IntegrityError:
-            # Returnerer fejlbesked hvis spilleren allerede findes i watchlisten
+            # Returns an error message if the player already exists in the watchlist
             return {
                 "added": False,
                 "reason": f"{player.get('short_name')} is already in your watchlist",
@@ -104,14 +104,14 @@ def add_to_watchlist(player: dict) -> dict:
 
 
 def get_watchlist() -> list[dict]:
-    # Henter alle spillere i watchlisten sorteret med senest tilføjede først
+    # Fetches all players in the watchlist sorted with most recently added first
     with get_connection() as conn:
         rows = conn.execute("SELECT * FROM watchlist ORDER BY id DESC").fetchall()
     return [dict(row) for row in rows]
 
 
 def remove_from_watchlist(player_id: int) -> dict:
-    # Fjerner en spiller fra watchlisten via ID - rowcount 0 betyder spilleren ikke fandtes
+    # Removes a player from the watchlist by ID - rowcount 0 means the player was not found
     with get_connection() as conn:
         cursor = conn.execute("DELETE FROM watchlist WHERE id = ?", (player_id,))
     if cursor.rowcount == 0:

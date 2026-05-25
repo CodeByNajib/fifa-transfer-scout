@@ -9,7 +9,7 @@ import plotly.express as px
 from app.api.constants import POSITIONS
 from app.api.utils import format_market_value, handle_api_error
 
-# Streamlit-kode bruger denne miljøvariabel
+# Streamlit code uses this environment variable
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
@@ -20,6 +20,7 @@ def render_watchlist_button(row: dict, prefix: str) -> None:
             st.success(f"{row['short_name']} added!")
         else:
             handle_api_error(res)
+
 
 st.set_page_config(
     page_title="FIFA Transfer Scout",
@@ -51,11 +52,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Initialisér aktiv side i session state hvis den ikke findes
+# Initialize the active page in session state if not already set
 if "page" not in st.session_state:
     st.session_state.page = "[TOP]  Players"
 
-# Custom CSS til knap-navigation i sidebar
+# Custom CSS for button navigation in sidebar
 st.markdown(
     """
 <style>
@@ -88,7 +89,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Sidebar navigationsknapper
+# Sidebar navigation buttons
 with st.sidebar:
     st.image("app/frontend/assets/logo.png", width="stretch")
     st.markdown("### Analysis Mode")
@@ -105,7 +106,7 @@ with st.sidebar:
         "[NEWS]  Live Football",
     ]
 
-    # Vis en knap per side - klik sætter session state
+    # Show one button per page - click sets session state
     for p in pages:
         if st.button(p, key=f"nav_{p}"):
             st.session_state.page = p
@@ -116,7 +117,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-# Hent aktiv side fra session state
+# Get active page from session state
 page = st.session_state.page
 
 
@@ -141,13 +142,13 @@ if page == "[TOP]  Players":
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
 
-        # Opsummeringsmetrikker øverst
+        # Summary metrics at the top
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg. Rating", f"{df['overall'].mean():.1f}")
         c2.metric("Avg. Age", f"{df['age'].mean():.1f} yrs")
         c3.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
 
-        # Vandret søjlediagram
+        # Horizontal bar chart
         fig, ax = plt.subplots(figsize=(8, top_n * 0.4 + 1), facecolor="#0e1117")
         ax.set_facecolor("#0e1117")
         colors = [
@@ -173,7 +174,7 @@ if page == "[TOP]  Players":
         fig.tight_layout()
         st.pyplot(fig)
 
-        # Tabel med watchlist-knap per spiller
+        # Table with watchlist button per player
         st.markdown("#### Player List")
         value_fmts = df["value_eur"].apply(format_market_value)
         for row, value_fmt in zip(df.to_dict("records"), value_fmts):
@@ -211,7 +212,7 @@ elif page == "[GEM]  Hidden Gems":
         c2.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
         c3.metric("Best value score", f"{df['value_score'].max():.1f}")
 
-        # Scatter: rating vs. markedsværdi - hover viser spillernavn interaktivt
+        # Scatter: rating vs. market value - hover shows player name interactively
         fig = px.scatter(
             df,
             x=df["value_eur"] / 1_000_000,
@@ -242,7 +243,7 @@ elif page == "[GEM]  Hidden Gems":
         )
         st.plotly_chart(fig, width="stretch")
 
-        # Tabel med watchlist-knap per spiller
+        # Table with watchlist button per player
         st.markdown("#### Player List")
         value_fmts = df["value_eur"].apply(format_market_value)
         for row, value_fmt in zip(df.to_dict("records"), value_fmts):
@@ -268,7 +269,7 @@ elif page == "[PEAK]  Career Peak":
 
         fig, axes = plt.subplots(1, 2, figsize=(10, 4), facecolor="#0e1117")
 
-        # Peak-alder per position
+        # Peak age per position
         ax = axes[0]
         ax.set_facecolor("#0e1117")
         colors = [
@@ -285,7 +286,7 @@ elif page == "[PEAK]  Career Peak":
         for i, (pos, age) in enumerate(zip(df["position"], df["peak_age"])):
             ax.text(i, age + 0.3, str(age), ha="center", color="#c9d1d9", fontsize=9)
 
-        # Gennemsnitsrating per position
+        # Average rating per position
         ax2 = axes[1]
         ax2.set_facecolor("#0e1117")
         ax2.bar(df["position"], df["avg_rating"], color="#388bfd", width=0.6)
@@ -318,12 +319,12 @@ elif page == "[MAP]  World Map":
     if response.status_code == 200:
         counts_df = pd.DataFrame(response.json())
 
-        # Hent verdenskortet direkte fra Natural Earth data
+        # Fetch the world map directly from Natural Earth data
         world = gpd.read_file(
             "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
         )
 
-        # Map navne for at sikre bedre match (FIFA navne vs. kortnavn)
+        # Map names to ensure better match (FIFA names vs. short name)
         name_map = {
             "United States": "United States of America",
             "England": "United Kingdom",
@@ -331,14 +332,14 @@ elif page == "[MAP]  World Map":
         }
         counts_df["country"] = counts_df["country"].replace(name_map)
 
-        # Merge FIFA-data med verdenskortet
+        # Merge FIFA data with the world map
         world = world.merge(counts_df, left_on="ADMIN", right_on="country", how="left")
         world["player_count"] = world["player_count"].fillna(0)
 
         fig, ax = plt.subplots(1, 1, figsize=(15, 8), facecolor="#0e1117")
         ax.set_facecolor("#0e1117")
 
-        # Tegn kortet med farveintensitet baseret på spillerantal
+        # Draw the map with color intensity based on player count
         world.plot(
             column="player_count",
             ax=ax,
@@ -354,7 +355,7 @@ elif page == "[MAP]  World Map":
         fig.tight_layout()
         st.pyplot(fig)
 
-        # Top 10 lande i tabel under kortet
+        # Top 10 countries in table below the map
         st.markdown("#### Distribution Details")
         st.dataframe(counts_df.head(10), width="stretch", hide_index=True)
     else:
@@ -378,7 +379,7 @@ elif page == "[LIST]  Watchlist":
         st.markdown(f"**{len(players)} players saved**")
         st.divider()
 
-        # Vis hver spiller med metrics og slet-knap
+        # Show each player with metrics and delete button
         for player in players:
             col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
             with col1:
@@ -393,7 +394,7 @@ elif page == "[LIST]  Watchlist":
                 st.metric("Value", format_market_value(player["value_eur"]))
             with col5:
                 st.write("")
-                # Fjern spiller fra watchlisten via DELETE-endpoint
+                # Remove player from watchlist via DELETE endpoint
                 if st.button("Remove", key=f"del_{player['id']}"):
                     del_res = requests.delete(f"{API_URL}/watchlist/{player['id']}")
                     if del_res.status_code == 200:
@@ -410,12 +411,18 @@ elif page == "[AI]  Scout Assistant":
 
     position = st.selectbox("Select position", POSITIONS, label_visibility="visible")
 
-    top_response = requests.get(f"{API_URL}/players/top/{position}", params={"top_n": 10})
+    top_response = requests.get(
+        f"{API_URL}/players/top/{position}", params={"top_n": 10}
+    )
     if handle_api_error(top_response):
         st.stop()
     context_data = top_response.json()
 
-    query = st.text_area("Your question", placeholder="e.g. Who is the best value-for-money striker?", height=100)
+    query = st.text_area(
+        "Your question",
+        placeholder="e.g. Who is the best value-for-money striker?",
+        height=100,
+    )
 
     if st.button("Ask Scout") and query.strip():
         with st.spinner("Thinking..."):
@@ -499,9 +506,7 @@ elif page == "[NEWS]  Live Football":
                             unsafe_allow_html=True,
                         )
                     with col2:
-                        competition = (
-                            match.get("competition", {}).get("name", "")
-                        )
+                        competition = match.get("competition", {}).get("name", "")
                         st.markdown(
                             f'<span style="color:#8b949e; font-size:0.8rem;">{competition}</span>',
                             unsafe_allow_html=True,
@@ -524,7 +529,7 @@ elif page == "[LOG]  History":
     with col1:
         st.markdown("Your previous AI scout questions and answers")
     with col2:
-        # Slet al historik via DELETE-endpoint
+        # Delete all history via DELETE endpoint
         if st.button("Clear history"):
             del_res = requests.delete(f"{API_URL}/scout/history")
             if not handle_api_error(del_res):
@@ -538,7 +543,7 @@ elif page == "[LOG]  History":
     if not history:
         st.info("No history yet - ask the AI scout a question!")
     else:
-        # Vis hvert spørgsmål/svar i en collapsible expander
+        # Show each question/answer in a collapsible expander
         for entry in history:
             with st.expander(f"{entry['timestamp']}  |  {entry['query'][:60]}..."):
                 st.markdown(f"**Question:** {entry['query']}")

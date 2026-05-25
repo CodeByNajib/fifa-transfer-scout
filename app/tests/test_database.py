@@ -11,7 +11,7 @@ from app.api.database import (
     remove_from_watchlist,
 )
 
-# Eksempel på en spiller der bruges i flere tests
+# Example player used across multiple tests
 SAMPLE_PLAYER = {
     "short_name": "L. Messi",
     "age": 34,
@@ -35,18 +35,18 @@ SAMPLE_PLAYER_2 = {
 
 @pytest.fixture(autouse=True)
 def use_temp_db(tmp_path, monkeypatch):
-    # Omdirigerer DB_PATH til en midlertidig fil så tests ikke rammer produktionsdatabasen
+    # Redirects DB_PATH to a temporary file so tests don't hit the production database
     temp_db = tmp_path / "test_scout.db"
     monkeypatch.setattr(database, "DB_PATH", temp_db)
     init_db()
     yield
 
 
-# ─── Scout historik tests ──────────────────────────────────────────────────────
+# ─── Scout history tests ──────────────────────────────────────────────────────
 
 
 def test_save_and_get_scout_history():
-    # Gemmer et spørgsmål og verificerer at det kan hentes igen
+    # Saves a question and verifies it can be retrieved again
     save_scout_query("Is Messi good?", "Yes, he is the best.", "RW")
     history = get_scout_history()
 
@@ -57,7 +57,7 @@ def test_save_and_get_scout_history():
 
 
 def test_scout_history_newest_first():
-    # Verificerer at nyeste spørgsmål returneres først
+    # Verifies that the newest question is returned first
     save_scout_query("First question", "First answer", "ST")
     save_scout_query("Second question", "Second answer", "CB")
     history = get_scout_history()
@@ -67,7 +67,7 @@ def test_scout_history_newest_first():
 
 
 def test_scout_history_limit():
-    # Verificerer at limit-parameteren virker korrekt
+    # Verifies that the limit parameter works correctly
     for i in range(5):
         save_scout_query(f"Question {i}", f"Answer {i}", "CM")
 
@@ -76,7 +76,7 @@ def test_scout_history_limit():
 
 
 def test_clear_scout_history():
-    # Verificerer at al historik slettes korrekt
+    # Verifies that all history is deleted correctly
     save_scout_query("Question", "Answer", "GK")
     clear_scout_history()
     history = get_scout_history()
@@ -85,7 +85,7 @@ def test_clear_scout_history():
 
 
 def test_save_scout_query_without_position():
-    # Verificerer at position kan være None
+    # Verifies that position can be None
     save_scout_query("Generic question", "Generic answer", None)
     history = get_scout_history()
 
@@ -96,13 +96,13 @@ def test_save_scout_query_without_position():
 
 
 def test_add_to_watchlist():
-    # Verificerer at en spiller kan tilføjes til watchlisten
+    # Verifies that a player can be added to the watchlist
     result = add_to_watchlist(SAMPLE_PLAYER)
     assert result["added"] is True
 
 
 def test_get_watchlist():
-    # Verificerer at spillere i watchlisten kan hentes
+    # Verifies that players in the watchlist can be retrieved
     add_to_watchlist(SAMPLE_PLAYER)
     watchlist = get_watchlist()
 
@@ -112,7 +112,7 @@ def test_get_watchlist():
 
 
 def test_watchlist_newest_first():
-    # Verificerer at nyeste tilføjede spiller returneres først
+    # Verifies that the most recently added player is returned first
     add_to_watchlist(SAMPLE_PLAYER)
     add_to_watchlist(SAMPLE_PLAYER_2)
     watchlist = get_watchlist()
@@ -121,7 +121,7 @@ def test_watchlist_newest_first():
 
 
 def test_add_duplicate_player():
-    # Verificerer at UNIQUE constraint forhindrer duplikater
+    # Verifies that the UNIQUE constraint prevents duplicates
     add_to_watchlist(SAMPLE_PLAYER)
     result = add_to_watchlist(SAMPLE_PLAYER)
 
@@ -130,7 +130,7 @@ def test_add_duplicate_player():
 
 
 def test_remove_from_watchlist():
-    # Verificerer at en spiller kan fjernes fra watchlisten via ID
+    # Verifies that a player can be removed from the watchlist by ID
     add_to_watchlist(SAMPLE_PLAYER)
     watchlist = get_watchlist()
     player_id = watchlist[0]["id"]
@@ -141,7 +141,7 @@ def test_remove_from_watchlist():
 
 
 def test_remove_nonexistent_player():
-    # Verificerer at sletning af ikke-eksisterende spiller returnerer korrekt besked
+    # Verifies that deleting a non-existent player returns the correct message
     result = remove_from_watchlist(999)
 
     assert result["removed"] is False
@@ -149,7 +149,7 @@ def test_remove_nonexistent_player():
 
 
 def test_multiple_players_in_watchlist():
-    # Verificerer at flere spillere kan gemmes samtidigt
+    # Verifies that multiple players can be saved simultaneously
     add_to_watchlist(SAMPLE_PLAYER)
     add_to_watchlist(SAMPLE_PLAYER_2)
     watchlist = get_watchlist()
