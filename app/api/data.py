@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -61,9 +62,9 @@ def get_undervalued_players(
         & (df["overall"] >= MIN_OVERALL_RATING)
         & (~df["player_positions"].str.contains("GK", na=False))
     ].copy()
-    budget_players["value_score"] = budget_players["overall"] / (
-        budget_players["value_eur"] / 1_000_000 + 1
-    )
+    overall = np.array(budget_players["overall"])
+    values = np.array(budget_players["value_eur"])
+    budget_players["value_score"] = overall / (values / 1_000_000 + 1)
     return budget_players.nlargest(top_n, "value_score")[
         [
             "short_name",
@@ -86,7 +87,7 @@ def get_peak_age_by_position(df: pd.DataFrame) -> pd.DataFrame:
         group = df[df["player_positions"].str.contains(pos, na=False)]
         if len(group) > 0:
             peak_age = group.loc[group["overall"].idxmax(), "age"]
-            avg_rating = group["overall"].mean()
+            avg_rating = np.mean(group["overall"].values)
             results.append(
                 {
                     "position": pos,
