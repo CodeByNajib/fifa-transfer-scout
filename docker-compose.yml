@@ -6,6 +6,8 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
+    volumes:
+      - sqlite_data:/app/data
 
   streamlit:
     build:
