@@ -38,7 +38,7 @@ class ScoutQuery(BaseModel):
 
 
 @app.on_event("startup")
-def startup_event():
+def startup_event() -> None:
     # Load the dataset and create database tables on startup
     app.state.df = load_data()
     init_db()
@@ -49,7 +49,7 @@ def startup_event():
 
 # Root endpoint for quick verification that the server is running
 @app.get("/")
-def read_root():
+def read_root() -> dict:
     return {
         "message": "FIFA Transfer Scout API is running. Visit /docs for Swagger UI."
     }
@@ -57,7 +57,7 @@ def read_root():
 
 # Returns a list of the best players for a given position
 @app.get("/players/top/{position}")
-def top_players(request: Request, position: str, top_n: int = 10):
+def top_players(request: Request, position: str, top_n: int = 10) -> list[dict]:
     # Converts position to uppercase to match the dataset (e.g. 'st' -> 'ST')
     result = get_top_players(request.app.state.df, position.upper(), top_n)
     if result.empty:
@@ -69,7 +69,9 @@ def top_players(request: Request, position: str, top_n: int = 10):
 
 # Returns undervalued players below a specific market value in EUR
 @app.get("/players/undervalued")
-def undervalued_players(request: Request, max_value: float = DEFAULT_MAX_VALUE, top_n: int = 10):
+def undervalued_players(
+    request: Request, max_value: float = DEFAULT_MAX_VALUE, top_n: int = 10
+) -> list[dict]:
     result = get_undervalued_players(request.app.state.df, max_value, top_n)
     if result.empty:
         raise HTTPException(status_code=404, detail="No undervalued players found")
@@ -78,14 +80,14 @@ def undervalued_players(request: Request, max_value: float = DEFAULT_MAX_VALUE, 
 
 # Returns average peak age and rating per position
 @app.get("/players/peak-age")
-def peak_age(request: Request):
+def peak_age(request: Request) -> list[dict]:
     result = get_peak_age_by_position(request.app.state.df)
     return result.to_dict(orient="records")
 
 
 # AI Scout endpoint: connects filtered data with Mistral AI (RAG-light logic)
 @app.post("/players/ask-scout")
-def ask_scout(payload: ScoutQuery):
+def ask_scout(payload: ScoutQuery) -> dict:
     # Validates that player data has been provided with the request
     if not payload.context_data:
         raise HTTPException(
@@ -116,14 +118,14 @@ def ask_scout(payload: ScoutQuery):
 
 # Geographic endpoint: allows Streamlit to fetch nationality data
 @app.get("/players/nationality")
-def player_nationality(request: Request):
+def player_nationality(request: Request) -> list[dict]:
     result = get_nationality_counts(request.app.state.df)
     return result.to_dict(orient="records")
 
 
 # Live match data from football-data.org (project requirement)
 @app.get("/transfers/news")
-async def get_football_news():
+async def get_football_news() -> dict:
     # Fetches current football matches and results from an external API
     api_key = os.getenv("FOOTBALL_DATA_API_KEY")
     url = "https://api.football-data.org/v4/matches"
@@ -141,13 +143,13 @@ async def get_football_news():
 
 # Returns the most recent AI scout questions and answers
 @app.get("/scout/history")
-def scout_history(limit: int = 20):
+def scout_history(limit: int = 20) -> list[dict]:
     return get_scout_history(limit=limit)
 
 
 # Deletes all scout history
 @app.delete("/scout/history")
-def delete_scout_history():
+def delete_scout_history() -> dict:
     clear_scout_history()
     return {"message": "History cleared"}
 
@@ -157,7 +159,7 @@ def delete_scout_history():
 
 # Adds a player to the watchlist
 @app.post("/watchlist")
-def watchlist_add(player: dict):
+def watchlist_add(player: dict) -> dict:
     result = add_to_watchlist(player)
     if not result["added"]:
         raise HTTPException(status_code=409, detail=result["reason"])
@@ -166,13 +168,13 @@ def watchlist_add(player: dict):
 
 # Returns all players in the watchlist
 @app.get("/watchlist")
-def watchlist_get():
+def watchlist_get() -> list[dict]:
     return get_watchlist()
 
 
 # Removes a player from the watchlist by ID
 @app.delete("/watchlist/{player_id}")
-def watchlist_remove(player_id: int):
+def watchlist_remove(player_id: int) -> dict:
     result = remove_from_watchlist(player_id)
     if not result["removed"]:
         raise HTTPException(status_code=404, detail=result["reason"])

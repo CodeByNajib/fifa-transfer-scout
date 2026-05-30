@@ -100,7 +100,7 @@ def get_peak_age_by_position(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # Count number of players per country and return a dictionary
-def get_nationality_counts(df):
+def get_nationality_counts(df: pd.DataFrame) -> pd.DataFrame:
     counts = df["nationality_name"].value_counts().reset_index()
     counts.columns = ["country", "player_count"]
     return counts
