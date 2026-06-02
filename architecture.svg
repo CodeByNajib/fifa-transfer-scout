@@ -1,0 +1,81 @@
+<svg width="100%" viewBox="0 0 680 520" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>FIFA Transfer Scout Architecture</title>
+<desc>Architecture diagram showing Streamlit frontend, FastAPI backend, SQLite database and external services</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<!-- FRONTEND -->
+<rect x="40" y="40" width="180" height="200" rx="14" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text font-family="Arial" font-weight="500" font-size="14" fill="#085041" x="130" y="68" text-anchor="middle">Streamlit</text>
+<text font-family="Arial" font-size="12" fill="#0F6E56" x="130" y="84" text-anchor="middle">Frontend · port 8501</text>
+
+<rect x="60" y="100" width="140" height="32" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+<text font-family="Arial" font-size="12" fill="#085041" x="130" y="120" text-anchor="middle">8 sider (TOP, GEM...)</text>
+
+<rect x="60" y="142" width="140" height="32" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+<text font-family="Arial" font-size="12" fill="#085041" x="130" y="162" text-anchor="middle">Matplotlib · Plotly</text>
+
+<rect x="60" y="184" width="140" height="32" rx="6" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+<text font-family="Arial" font-size="12" fill="#085041" x="130" y="204" text-anchor="middle">GeoPandas · Natural Earth</text>
+
+<!-- BACKEND -->
+<rect x="260" y="40" width="180" height="200" rx="14" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text font-family="Arial" font-weight="500" font-size="14" fill="#26215C" x="350" y="68" text-anchor="middle">FastAPI</text>
+<text font-family="Arial" font-size="12" fill="#534AB7" x="350" y="84" text-anchor="middle">Backend · port 8000</text>
+
+<rect x="278" y="100" width="144" height="32" rx="6" fill="#AFA9EC" stroke="#534AB7" stroke-width="0.5"/>
+<text font-family="Arial" font-size="12" fill="#26215C" x="350" y="120" text-anchor="middle">main.py · endpoints</text>
+
+<rect x="278" y="142" width="144" height="32" rx="6" fill="#AFA9EC" stroke="#534AB7" stroke-width="0.5"/>
+<text font-family="Arial" font-size="12" fill="#26215C" x="350" y="162" text-anchor="middle">data.py · NumPy/Pandas</text>
+
+<rect x="278" y="184" width="144" height="32" rx="6" fill="#AFA9EC" stroke="#534AB7" stroke-width="0.5"/>
+<text font-family="Arial" font-size="12" fill="#26215C" x="350" y="204" text-anchor="middle">scout_ai.py · Mistral</text>
+
+<!-- Arrow Streamlit to FastAPI -->
+<line x1="220" y1="140" x2="258" y2="140" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text font-family="Arial" font-size="12" fill="#888780" x="239" y="132" text-anchor="middle">HTTP</text>
+
+<!-- CSV -->
+<rect x="260" y="290" width="180" height="52" rx="10" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+<text font-family="Arial" font-weight="500" font-size="14" fill="#412402" x="350" y="318" text-anchor="middle">players_22.csv</text>
+<text font-family="Arial" font-size="12" fill="#854F0B" x="350" y="334" text-anchor="middle">19.000 FIFA 22 spillere</text>
+
+<line x1="350" y1="290" x2="350" y2="242" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text font-family="Arial" font-size="12" fill="#888780" x="368" y="272" text-anchor="start">load_data()</text>
+
+<!-- SQLite -->
+<rect x="260" y="390" width="180" height="80" rx="10" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text font-family="Arial" font-weight="500" font-size="14" fill="#042C53" x="350" y="418" text-anchor="middle">SQLite</text>
+<text font-family="Arial" font-size="12" fill="#185FA5" x="350" y="436" text-anchor="middle">scout_history</text>
+<text font-family="Arial" font-size="12" fill="#185FA5" x="350" y="452" text-anchor="middle">watchlist</text>
+
+<line x1="350" y1="390" x2="350" y2="344" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text font-family="Arial" font-size="12" fill="#888780" x="368" y="372" text-anchor="start">database.py</text>
+
+<text font-family="Arial" font-size="12" fill="#888780" x="350" y="484" text-anchor="middle">Docker volume: sqlite_data:/app/data</text>
+
+<!-- Mistral AI -->
+<rect x="480" y="100" width="160" height="52" rx="10" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<text font-family="Arial" font-weight="500" font-size="14" fill="#4A1B0C" x="560" y="128" text-anchor="middle">Mistral AI</text>
+<text font-family="Arial" font-size="12" fill="#993C1D" x="560" y="144" text-anchor="middle">open-mistral-7b</text>
+
+<line x1="442" y1="200" x2="480" y2="140" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Football Data API -->
+<rect x="480" y="200" width="160" height="52" rx="10" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+<text font-family="Arial" font-weight="500" font-size="14" fill="#4A1B0C" x="560" y="226" text-anchor="middle">football-data.org</text>
+<text font-family="Arial" font-size="12" fill="#993C1D" x="560" y="242" text-anchor="middle">Live kampdata</text>
+
+<line x1="442" y1="215" x2="478" y2="224" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Docker labels -->
+<rect x="40" y="20" width="80" height="20" rx="4" fill="none" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="4 2"/>
+<text font-family="Arial" font-size="12" fill="#888780" x="80" y="34" text-anchor="middle">Docker</text>
+<rect x="260" y="20" width="80" height="20" rx="4" fill="none" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="4 2"/>
+<text font-family="Arial" font-size="12" fill="#888780" x="300" y="34" text-anchor="middle">Docker</text>
+
+</svg>
