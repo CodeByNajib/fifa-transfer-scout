@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import os
-import plotly.express as px
+import plotly.express as px  # type: ignore
 
 from app.api.constants import POSITIONS
 from app.api.utils import format_market_value, handle_api_error
@@ -62,14 +62,14 @@ st.markdown(
 <style>
     [data-testid="stSidebar"] .stButton button {
         width: 100%;
-        text-align: left;
+        text-align: center;
         background: transparent;
         border: 0.5px solid #2d333b;
         border-radius: 6px;
         color: #8b949e;
         font-size: 12px;
         font-family: monospace;
-        padding: 6px 10px;
+        padding: 8px 16px;
         margin-bottom: 4px;
         transition: all 0.15s;
     }
@@ -93,6 +93,10 @@ st.markdown(
 with st.sidebar:
     st.image("app/frontend/assets/logo.png", width="stretch")
     st.markdown("### Analysis Mode")
+    st.markdown(
+        '<p style="color:#8b949e; font-size:0.75rem; margin-top:-6px; margin-bottom:4px;">Select a view to explore</p>',
+        unsafe_allow_html=True,
+    )
     st.markdown("---")
 
     pages = [
@@ -146,45 +150,45 @@ if page == "[TOP]  Players":
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg. Rating", f"{df['overall'].mean():.1f}")
         c2.metric("Avg. Age", f"{df['age'].mean():.1f} yrs")
-        c3.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
+        c3.metric("Avg. Value", format_market_value(float(df["value_eur"].mean())))  # type: ignore[arg-type]
 
-        # Horizontal bar chart
-        fig, ax = plt.subplots(figsize=(8, top_n * 0.4 + 1), facecolor="#0e1117")
-        ax.set_facecolor("#0e1117")
-        colors = [
-            "#58a6ff" if r >= 88 else "#388bfd" if r >= 84 else "#1f6feb"
-            for r in df["overall"]
-        ]
-        bars = ax.barh(
-            df["short_name"][::-1], df["overall"][::-1], color=colors[::-1], height=0.6
-        )
-        ax.set_xlabel("Overall Rating", color="#8b949e")
-        ax.tick_params(colors="#8b949e")
-        ax.spines[["top", "right", "bottom", "left"]].set_visible(False)
-        ax.set_xlim(df["overall"].min() - 3, df["overall"].max() + 3)
-        for bar, val in zip(bars, df["overall"][::-1]):
-            ax.text(
-                bar.get_width() + 0.2,
-                bar.get_y() + bar.get_height() / 2,
-                str(val),
-                va="center",
-                color="#c9d1d9",
-                fontsize=9,
+        chart_col, list_col = st.columns([3, 2])
+        with chart_col:
+            fig, ax = plt.subplots(figsize=(8, top_n * 0.4 + 1), facecolor="#0e1117")
+            ax.set_facecolor("#0e1117")
+            colors = [
+                "#58a6ff" if r >= 88 else "#388bfd" if r >= 84 else "#1f6feb"
+                for r in df["overall"]
+            ]
+            bars = ax.barh(
+                df["short_name"][::-1], df["overall"][::-1], color=colors[::-1], height=0.6
             )
-        fig.tight_layout()
-        st.pyplot(fig)
-
-        # Table with watchlist button per player
-        st.markdown("#### Player List")
-        value_fmts = df["value_eur"].apply(format_market_value)
-        for row, value_fmt in zip(df.to_dict("records"), value_fmts):
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                st.markdown(
-                    f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; {value_fmt}"
+            ax.set_xlabel("Overall Rating", color="#8b949e")
+            ax.tick_params(colors="#8b949e")
+            ax.spines[["top", "right", "bottom", "left"]].set_visible(False)
+            ax.set_xlim(df["overall"].min() - 3, df["overall"].max() + 3)
+            for bar, val in zip(bars, df["overall"][::-1]):
+                ax.text(
+                    bar.get_width() + 0.2,
+                    bar.get_y() + bar.get_height() / 2,
+                    str(val),
+                    va="center",
+                    color="#c9d1d9",
+                    fontsize=9,
                 )
-            with col2:
-                render_watchlist_button(row, "watch_top")
+            fig.tight_layout()
+            st.pyplot(fig)
+        with list_col:
+            st.markdown("#### Player List")
+            value_fmts = df["value_eur"].apply(format_market_value)
+            for row, value_fmt in zip(df.to_dict("records"), value_fmts):
+                col1, col2 = st.columns([5, 1])
+                with col1:
+                    st.markdown(
+                        f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; {value_fmt}"
+                    )
+                with col2:
+                    render_watchlist_button(row, "watch_top")
     else:
         handle_api_error(response)
 
@@ -209,51 +213,51 @@ elif page == "[GEM]  Hidden Gems":
 
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg. Rating", f"{df['overall'].mean():.1f}")
-        c2.metric("Avg. Value", format_market_value(df["value_eur"].mean()))
+        c2.metric("Avg. Value", format_market_value(float(df["value_eur"].mean())))  # type: ignore[arg-type]
         c3.metric("Best value score", f"{df['value_score'].max():.1f}")
 
-        # Scatter: rating vs. market value - hover shows player name interactively
-        fig = px.scatter(
-            df,
-            x=df["value_eur"] / 1_000_000,
-            y="overall",
-            color="value_score",
-            hover_name="short_name",
-            hover_data={
-                "overall": True,
-                "value_score": ":.1f",
-                "player_positions": True,
-                "club_name": True,
-            },
-            color_continuous_scale="Blues",
-            labels={
-                "x": "Market Value (€M)",
-                "overall": "Overall Rating",
-                "value_score": "Value Score",
-            },
-        )
-        fig.update_traces(marker=dict(size=12, line=dict(width=1, color="#58a6ff")))
-        fig.update_layout(
-            paper_bgcolor="#0e1117",
-            plot_bgcolor="#0e1117",
-            font=dict(color="#c9d1d9"),
-            yaxis=dict(range=[70, 85], gridcolor="#2d333b"),
-            xaxis=dict(gridcolor="#2d333b"),
-            coloraxis_colorbar=dict(title="Score"),
-        )
-        st.plotly_chart(fig, width="stretch")
-
-        # Table with watchlist button per player
-        st.markdown("#### Player List")
-        value_fmts = df["value_eur"].apply(format_market_value)
-        for row, value_fmt in zip(df.to_dict("records"), value_fmts):
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                st.markdown(
-                    f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; Score: {row['value_score']:.1f} &nbsp;|&nbsp; {value_fmt}"
-                )
-            with col2:
-                render_watchlist_button(row, "watch_gem")
+        chart_col, list_col = st.columns([3, 2])
+        with chart_col:
+            fig = px.scatter(
+                df,
+                x=df["value_eur"] / 1_000_000,
+                y="overall",
+                color="value_score",
+                hover_name="short_name",
+                hover_data={
+                    "overall": True,
+                    "value_score": ":.1f",
+                    "player_positions": True,
+                    "club_name": True,
+                },
+                color_continuous_scale="Blues",
+                labels={
+                    "x": "Market Value (€M)",
+                    "overall": "Overall Rating",
+                    "value_score": "Value Score",
+                },
+            )
+            fig.update_traces(marker=dict(size=12, line=dict(width=1, color="#58a6ff")))
+            fig.update_layout(
+                paper_bgcolor="#0e1117",
+                plot_bgcolor="#0e1117",
+                font=dict(color="#c9d1d9"),
+                yaxis=dict(range=[70, 85], gridcolor="#2d333b"),
+                xaxis=dict(gridcolor="#2d333b"),
+                coloraxis_colorbar=dict(title="Score"),
+            )
+            st.plotly_chart(fig, width="stretch")
+        with list_col:
+            st.markdown("#### Player List")
+            value_fmts = df["value_eur"].apply(format_market_value)
+            for row, value_fmt in zip(df.to_dict("records"), value_fmts):
+                col1, col2 = st.columns([5, 1])
+                with col1:
+                    st.markdown(
+                        f"**{row['short_name']}** &nbsp;|&nbsp; {row['player_positions']} &nbsp;|&nbsp; ⭐ {row['overall']} &nbsp;|&nbsp; Score: {row['value_score']:.1f} &nbsp;|&nbsp; {value_fmt}"
+                    )
+                with col2:
+                    render_watchlist_button(row, "watch_gem")
     else:
         handle_api_error(response)
 
@@ -267,42 +271,45 @@ elif page == "[PEAK]  Career Peak":
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
 
-        fig, axes = plt.subplots(1, 2, figsize=(10, 4), facecolor="#0e1117")
+        chart_col, data_col = st.columns([3, 2])
+        with chart_col:
+            fig, axes = plt.subplots(1, 2, figsize=(10, 4), facecolor="#0e1117")
 
-        # Peak age per position
-        ax = axes[0]
-        ax.set_facecolor("#0e1117")
-        colors = [
-            "#58a6ff" if a >= 32 else "#388bfd" if a >= 29 else "#1f6feb"
-            for a in df["peak_age"]
-        ]
-        ax.bar(df["position"], df["peak_age"], color=colors, width=0.6)
-        ax.set_ylim(20, 40)
-        ax.set_title("Peak Age per Position", color="#c9d1d9", pad=12)
-        ax.set_ylabel("Age", color="#8b949e")
-        ax.tick_params(colors="#8b949e")
-        ax.spines[["top", "right", "left"]].set_visible(False)
-        ax.spines["bottom"].set_color("#2d333b")
-        for i, (pos, age) in enumerate(zip(df["position"], df["peak_age"])):
-            ax.text(i, age + 0.3, str(age), ha="center", color="#c9d1d9", fontsize=9)
+            # Peak age per position
+            ax = axes[0]
+            ax.set_facecolor("#0e1117")
+            colors = [
+                "#58a6ff" if a >= 32 else "#388bfd" if a >= 29 else "#1f6feb"
+                for a in df["peak_age"]
+            ]
+            ax.bar(df["position"], df["peak_age"], color=colors, width=0.6)
+            ax.set_ylim(20, 40)
+            ax.set_title("Peak Age per Position", color="#c9d1d9", pad=12)
+            ax.set_ylabel("Age", color="#8b949e")
+            ax.tick_params(colors="#8b949e")
+            ax.spines[["top", "right", "left"]].set_visible(False)
+            ax.spines["bottom"].set_color("#2d333b")
+            for i, (pos, age) in enumerate(zip(df["position"], df["peak_age"])):
+                ax.text(i, age + 0.3, str(age), ha="center", color="#c9d1d9", fontsize=9)
 
-        # Average rating per position
-        ax2 = axes[1]
-        ax2.set_facecolor("#0e1117")
-        ax2.bar(df["position"], df["avg_rating"], color="#388bfd", width=0.6)
-        ax2.set_title("Avg. Rating per Position", color="#c9d1d9", pad=12)
-        ax2.set_ylabel("Rating", color="#8b949e")
-        ax2.tick_params(colors="#8b949e")
-        ax2.spines[["top", "right", "left"]].set_visible(False)
-        ax2.spines["bottom"].set_color("#2d333b")
-        ax2.set_ylim(60, 70)
-        for i, (pos, r) in enumerate(zip(df["position"], df["avg_rating"])):
-            ax2.text(i, r + 0.1, str(r), ha="center", color="#c9d1d9", fontsize=9)
+            # Average rating per position
+            ax2 = axes[1]
+            ax2.set_facecolor("#0e1117")
+            ax2.bar(df["position"], df["avg_rating"], color="#388bfd", width=0.6)
+            ax2.set_title("Avg. Rating per Position", color="#c9d1d9", pad=12)
+            ax2.set_ylabel("Rating", color="#8b949e")
+            ax2.tick_params(colors="#8b949e")
+            ax2.spines[["top", "right", "left"]].set_visible(False)
+            ax2.spines["bottom"].set_color("#2d333b")
+            ax2.set_ylim(60, 70)
+            for i, (pos, r) in enumerate(zip(df["position"], df["avg_rating"])):
+                ax2.text(i, r + 0.1, str(r), ha="center", color="#c9d1d9", fontsize=9)
 
-        fig.tight_layout()
-        st.pyplot(fig)
-
-        st.dataframe(df, width="stretch", hide_index=True)
+            fig.tight_layout()
+            st.pyplot(fig)
+        with data_col:
+            st.markdown("#### Position Data")
+            st.dataframe(df, height=350, hide_index=True)
     else:
         handle_api_error(response)
 
@@ -355,9 +362,13 @@ elif page == "[MAP]  World Map":
         fig.tight_layout()
         st.pyplot(fig)
 
-        # Top 10 countries in table below the map
         st.markdown("#### Distribution Details")
-        st.dataframe(counts_df.head(10), width="stretch", hide_index=True)
+        table_col, stats_col = st.columns([3, 1])
+        with table_col:
+            st.dataframe(counts_df.head(10), width="stretch", hide_index=True)
+        with stats_col:
+            st.metric("Countries represented", len(counts_df))
+            st.metric("Total players", int(counts_df["player_count"].sum()))  # type: ignore[arg-type]
     else:
         handle_api_error(response)
 
@@ -379,29 +390,28 @@ elif page == "[LIST]  Watchlist":
         st.markdown(f"**{len(players)} players saved**")
         st.divider()
 
-        # Show each player with metrics and delete button
-        for player in players:
-            col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
-            with col1:
-                st.markdown(
-                    f"**{player['short_name']}**  \n{player['nationality']} · {player['position']}"
-                )
-            with col2:
-                st.metric("Rating", player["overall"])
-            with col3:
-                st.metric("Potential", player["potential"])
-            with col4:
-                st.metric("Value", format_market_value(player["value_eur"]))
-            with col5:
-                st.write("")
-                # Remove player from watchlist via DELETE endpoint
-                if st.button("Remove", key=f"del_{player['id']}"):
-                    del_res = requests.delete(f"{API_URL}/watchlist/{player['id']}")
-                    if del_res.status_code == 200:
-                        st.rerun()
-                    else:
-                        handle_api_error(del_res)
-            st.divider()
+        with st.container():
+            for player in players:
+                col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
+                with col1:
+                    st.markdown(
+                        f"**{player['short_name']}**  \n{player['nationality']} · {player['position']}"
+                    )
+                with col2:
+                    st.metric("Rating", player["overall"])
+                with col3:
+                    st.metric("Potential", player["potential"])
+                with col4:
+                    st.metric("Value", format_market_value(player["value_eur"]))
+                with col5:
+                    st.write("")
+                    if st.button("Remove", key=f"del_{player['id']}"):
+                        del_res = requests.delete(f"{API_URL}/watchlist/{player['id']}")
+                        if del_res.status_code == 200:
+                            st.rerun()
+                        else:
+                            handle_api_error(del_res)
+                st.divider()
 
 
 # --- AI Scout Assistant ---
@@ -409,7 +419,15 @@ elif page == "[AI]  Scout Assistant":
     st.markdown("### [AI] Scout Assistant")
     st.markdown("Ask the AI scout anything about players for a specific position.")
 
-    position = st.selectbox("Select position", POSITIONS, label_visibility="visible")
+    input_col, answer_col = st.columns([2, 3])
+    with input_col:
+        position = st.selectbox("Select position", POSITIONS, label_visibility="visible")
+        query = st.text_area(
+            "Your question",
+            placeholder="e.g. Who is the best value-for-money striker?",
+            height=170,
+        )
+        ask_button = st.button("Ask Scout")
 
     top_response = requests.get(
         f"{API_URL}/players/top/{position}", params={"top_n": 10}
@@ -418,23 +436,18 @@ elif page == "[AI]  Scout Assistant":
         st.stop()
     context_data = top_response.json()
 
-    query = st.text_area(
-        "Your question",
-        placeholder="e.g. Who is the best value-for-money striker?",
-        height=100,
-    )
-
-    if st.button("Ask Scout") and query.strip():
-        with st.spinner("Thinking..."):
-            ask_response = requests.post(
-                f"{API_URL}/players/ask-scout",
-                json={"query": query, "context_data": context_data},
-            )
-        if ask_response.status_code == 200:
-            st.markdown("#### Scout Answer")
-            st.markdown(ask_response.json().get("answer", ""))
-        else:
-            handle_api_error(ask_response)
+    with answer_col:
+        if ask_button and query.strip():
+            with st.spinner("Thinking..."):
+                ask_response = requests.post(
+                    f"{API_URL}/players/ask-scout",
+                    json={"query": query, "context_data": context_data},
+                )
+            if ask_response.status_code == 200:
+                st.markdown("#### Scout Answer")
+                st.markdown(ask_response.json().get("answer", ""))
+            else:
+                handle_api_error(ask_response)
 
 
 # --- Live Football News ---
@@ -546,7 +559,9 @@ elif page == "[LOG]  History":
         # Show each question/answer in a collapsible expander
         for entry in history:
             with st.expander(f"{entry['timestamp']}  |  {entry['query'][:60]}..."):
-                st.markdown(f"**Question:** {entry['query']}")
-                st.markdown(f"**Position:** {entry['position'] or 'Not specified'}")
-                st.divider()
-                st.markdown(f"**Answer:**  \n{entry['response']}")
+                col_q, col_a = st.columns([2, 3])
+                with col_q:
+                    st.markdown(f"**Question:** {entry['query']}")
+                    st.markdown(f"**Position:** {entry['position'] or 'Not specified'}")
+                with col_a:
+                    st.markdown(f"**Answer:**  \n{entry['response']}")

@@ -129,7 +129,7 @@ async def get_football_news() -> dict:
     # Fetches current football matches and results from an external API
     api_key = os.getenv("FOOTBALL_DATA_API_KEY")
     url = "https://api.football-data.org/v4/matches"
-    headers = {"X-Auth-Token": api_key}
+    headers: dict[str, str] = {"X-Auth-Token": api_key} if api_key is not None else {}
 
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)

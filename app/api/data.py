@@ -29,7 +29,7 @@ def load_data() -> pd.DataFrame:
         "nationality_name",
         "league_name",
     ]
-    df = df[columns].dropna()
+    df = pd.DataFrame(df[columns].dropna())
     df["value_eur"] = df["value_eur"].astype(float)
     df["wage_eur"] = df["wage_eur"].astype(float)
     return df
@@ -38,8 +38,8 @@ def load_data() -> pd.DataFrame:
 # Returns the best players for a given position, sorted by overall rating
 def get_top_players(df: pd.DataFrame, position: str, top_n: int = 10) -> pd.DataFrame:
     """Return the best player for a given position."""
-    filtered = df[df["player_positions"].str.contains(position.upper(), na=False)]
-    return filtered.nlargest(top_n, "overall")[
+    filtered = pd.DataFrame(df[df["player_positions"].str.contains(position.upper(), na=False)])
+    return pd.DataFrame(filtered.nlargest(top_n, "overall")[
         [
             "short_name",
             "age",
@@ -49,7 +49,7 @@ def get_top_players(df: pd.DataFrame, position: str, top_n: int = 10) -> pd.Data
             "club_name",
             "player_positions",
         ]
-    ]
+    ])
 
 
 # Finds players with high rating relative to their market value, excludes GK and players below 75
@@ -57,15 +57,15 @@ def get_undervalued_players(
     df: pd.DataFrame, max_value: float, top_n: int = 10
 ) -> pd.DataFrame:
     """Find players with high rating relative to their market value."""
-    budget_players = df[
+    budget_players = pd.DataFrame(df[
         (df["value_eur"] <= max_value)
         & (df["overall"] >= MIN_OVERALL_RATING)
         & (~df["player_positions"].str.contains("GK", na=False))
-    ].copy()
+    ].copy())
     overall = np.array(budget_players["overall"])
     values = np.array(budget_players["value_eur"])
     budget_players["value_score"] = overall / (values / 1_000_000 + 1)
-    return budget_players.nlargest(top_n, "value_score")[
+    return pd.DataFrame(budget_players.nlargest(top_n, "value_score")[
         [
             "short_name",
             "age",
@@ -75,7 +75,7 @@ def get_undervalued_players(
             "player_positions",
             "value_score",
         ]
-    ]
+    ])
 
 
 # Calculates peak age and average rating per position across all players
@@ -84,10 +84,10 @@ def get_peak_age_by_position(df: pd.DataFrame) -> pd.DataFrame:
     positions = POSITIONS
     results = []
     for pos in positions:
-        group = df[df["player_positions"].str.contains(pos, na=False)]
+        group = pd.DataFrame(df[df["player_positions"].str.contains(pos, na=False)])
         if len(group) > 0:
             peak_age = group.loc[group["overall"].idxmax(), "age"]
-            avg_rating = np.mean(group["overall"].values)
+            avg_rating = float(group["overall"].mean())  # type: ignore[arg-type]
             results.append(
                 {
                     "position": pos,
