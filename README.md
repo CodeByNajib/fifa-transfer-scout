@@ -139,3 +139,6 @@ pyright app
 ### Scout History
 - `GET /scout/history` – Retrieve previous AI scout queries
 - `DELETE /scout/history` – Clear all scout history
+
+## Architecture
+![Architecture](architecture.svg)
