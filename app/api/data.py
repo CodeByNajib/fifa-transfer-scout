@@ -38,18 +38,22 @@ def load_data() -> pd.DataFrame:
 # Returns the best players for a given position, sorted by overall rating
 def get_top_players(df: pd.DataFrame, position: str, top_n: int = 10) -> pd.DataFrame:
     """Return the best player for a given position."""
-    filtered = pd.DataFrame(df[df["player_positions"].str.contains(position.upper(), na=False)])
-    return pd.DataFrame(filtered.nlargest(top_n, "overall")[
-        [
-            "short_name",
-            "age",
-            "overall",
-            "potential",
-            "value_eur",
-            "club_name",
-            "player_positions",
+    filtered = pd.DataFrame(
+        df[df["player_positions"].str.contains(position.upper(), na=False)]
+    )
+    return pd.DataFrame(
+        filtered.nlargest(top_n, "overall")[
+            [
+                "short_name",
+                "age",
+                "overall",
+                "potential",
+                "value_eur",
+                "club_name",
+                "player_positions",
+            ]
         ]
-    ])
+    )
 
 
 # Finds players with high rating relative to their market value, excludes GK and players below 75
@@ -57,25 +61,29 @@ def get_undervalued_players(
     df: pd.DataFrame, max_value: float, top_n: int = 10
 ) -> pd.DataFrame:
     """Find players with high rating relative to their market value."""
-    budget_players = pd.DataFrame(df[
-        (df["value_eur"] <= max_value)
-        & (df["overall"] >= MIN_OVERALL_RATING)
-        & (~df["player_positions"].str.contains("GK", na=False))
-    ].copy())
+    budget_players = pd.DataFrame(
+        df[
+            (df["value_eur"] <= max_value)
+            & (df["overall"] >= MIN_OVERALL_RATING)
+            & (~df["player_positions"].str.contains("GK", na=False))
+        ].copy()
+    )
     overall = np.array(budget_players["overall"])
     values = np.array(budget_players["value_eur"])
     budget_players["value_score"] = overall / (values / 1_000_000 + 1)
-    return pd.DataFrame(budget_players.nlargest(top_n, "value_score")[
-        [
-            "short_name",
-            "age",
-            "overall",
-            "value_eur",
-            "club_name",
-            "player_positions",
-            "value_score",
+    return pd.DataFrame(
+        budget_players.nlargest(top_n, "value_score")[
+            [
+                "short_name",
+                "age",
+                "overall",
+                "value_eur",
+                "club_name",
+                "player_positions",
+                "value_score",
+            ]
         ]
-    ])
+    )
 
 
 # Calculates peak age and average rating per position across all players

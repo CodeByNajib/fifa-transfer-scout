@@ -25,6 +25,7 @@ def ask_scout_assistant(question: str, context_df: pd.DataFrame) -> str:
     Question: {question}
     """
     response = client.chat.complete(
-        model=MISTRAL_MODEL, messages=[{"role": "user", "content": prompt}]
+        model=MISTRAL_MODEL,
+        messages=[{"role": "user", "content": prompt}],  # type: ignore
     )
-    return response.choices[0].message.content
+    return response.choices[0].message.content  # type: ignore

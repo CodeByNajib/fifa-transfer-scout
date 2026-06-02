@@ -1,3 +1,8 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["app/tests"]
+
+[tool.pyright]
+include = ["app"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

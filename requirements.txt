@@ -51,6 +51,7 @@ pygments==2.20.0
 pyogrio==0.12.1
 pyparsing==3.3.2
 pyproj==3.7.2
+pyright==1.1.410
 pytest==9.0.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2

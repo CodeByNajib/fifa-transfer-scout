@@ -94,7 +94,7 @@ ruff check .
 ruff check --fix
 
 # Type checks
-python -m mypy app --explicit-package-bases --ignore-missing-imports
+pyright app
 ```
 
 ## Project Structure
